@@ -132,38 +132,27 @@ python validate_all.py
 - **Schema Compliance**: Verify required keys and data types
 - **Cross-File Consistency**: Entity IDs match between related files (e.g., issues reference valid entities)
 
-### Sample Validation Output
-```
-Validating metrics_timeseries.jsonl...
-metrics_timeseries.jsonl: Valid JSON, count: 120
-Sample timeseries keys: ['entity_id', 'metric_name', 'aggregation', 'timeframe', 'points']
-Points count: 60
+### Validation Results (v1.0.0)
 
-Validating infrastructure_entities.jsonl...
-infrastructure_entities.jsonl: Valid JSON, count: 1
-Sample entity keys: ['adjusted_timeframe', 'can_load_more', 'items', 'total_hits']
-Items count: 120
-First item keys: ['entity_health_info', 'label', 'entity_id', 'entity_type', 'plugin', 'snapshot_id', 'tags', 'metrics', 'time']
+✅ **All validation checks passed** with zero errors.
 
-Validating applications.jsonl...
-applications.jsonl: Valid JSON, count: 15
-Sample application keys: ['application_id', 'name', 'services', 'health', 'tags', 'metrics']
+**Dataset Summary:**
+| Dataset | File | Records | Status |
+|---------|------|---------|--------|
+| Infrastructure Entities | `infrastructure_entities.jsonl` | 120 items | ✅ Valid |
+| Applications | `applications.jsonl` | 15 apps | ✅ Valid |
+| Endpoints | `endpoints.jsonl` | 40 endpoints | ✅ Valid |
+| Metrics Time Series | `metrics_timeseries.jsonl` | 120 series (60 points each) | ✅ Valid |
+| Issues/Incidents | `issues.jsonl` | 30 issues | ✅ Valid |
 
-Validating endpoints.jsonl...
-endpoints.jsonl: Valid JSON, count: 40
-Sample endpoint keys: ['endpoint_id', 'path', 'method', 'service_id', 'metrics']
+**Cross-File Consistency:**
+- ✅ Found 120 unique `entity_ids` in `infrastructure_entities.jsonl`
+- ✅ All metrics timeseries `entity_ids` reference valid entities
+- ✅ All issues `entity_ids` reference valid entities
+- ✅ No orphaned references or data integrity issues
 
-Validating issues.jsonl...
-issues.jsonl: Valid JSON, count: 30
-Sample issue keys: ['issue_id', 'entity_id', 'severity', 'state', 'start_time', 'end_time', 'problem', 'tags']
-
-Cross-file consistency checks...
-Found 120 unique entity_ids in infrastructure_entities.jsonl
-All metrics timeseries entity_ids are valid.
-All issues entity_ids are valid.
-
-Validation complete.
-```
+**Full Validation Log:**
+Download the complete validation log from the [v1.0.0-instana-synthetic Release](https://github.com/marvan5111/Instana---Application-Performance-Management-APM-/releases/tag/v1.0.0-instana-synthetic) (attached as `validation_log.txt`).
 
 ## Future Work
 
