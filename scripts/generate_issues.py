@@ -1,31 +1,39 @@
-import argparse
-import json
-import random
-from instana_synthetic.generators import gen_issue_record, write_jsonl
+import json, random, time
+
+def now_ms():
+    return int(time.time() * 1000)
+
+def gen_issue(entity_ids):
+    eid = random.choice(entity_ids)
+    return {
+        "issue_id": f"ISS-{random.randint(100000,999999)}",
+        "entity_id": eid,
+        "severity": random.randint(1,5),
+        "state": random.choice(["open","closed"]),
+        "start_time": now_ms() - random.randint(1,30)*60_000,
+        "end_time": None if random.random() < 0.7 else now_ms(),
+        "problem": random.choice([
+            "Elevated latency",
+            "Error rate spike",
+            "CPU saturation"
+        ]),
+        "tags": random.sample(
+            ["env:prod","team:payments","region:us","region:apac","team:core"], k=2
+        )
+    }
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--count", type=int, default=30)
-    args = parser.parse_args()
+    # Load entity IDs from infrastructure_entities.jsonl
+    with open("data/instana/infrastructure_entities.jsonl") as f:
+        blob = json.loads(next(f))
+    entity_ids = [item["entity_id"] for item in blob["items"]]
 
-    # Load entity_ids from infrastructure_entities.jsonl
-    entity_ids = []
-    try:
-        with open("data/instana/infrastructure_entities.jsonl") as f:
-            data = json.loads(next(f))
-            entity_ids = [item["entity_id"] for item in data.get("items", [])]
-    except FileNotFoundError:
-        print("Warning: infrastructure_entities.jsonl not found. Using random entity_ids.")
-        entity_ids = [f"srv-{15284626 + i}" for i in range(120)]
+    # Generate 30 issues referencing valid entity IDs
+    issues = [gen_issue(entity_ids) for _ in range(30)]
 
-    # Generate issues with valid entity_ids
-    records = []
-    for i in range(args.count):
-        record = gen_issue_record(i)
-        record["entity_id"] = random.choice(entity_ids)  # Override with valid entity_id
-        records.append(record)
-
-    write_jsonl("data/instana/issues.jsonl", records)
+    with open("data/instana/issues.jsonl", "w") as out:
+        for issue in issues:
+            out.write(json.dumps(issue) + "\n")
 
 if __name__ == "__main__":
     main()
