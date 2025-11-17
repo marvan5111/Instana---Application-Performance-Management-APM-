@@ -165,6 +165,14 @@ All issues entity_ids are valid.
 Validation complete.
 ```
 
+## Future Work
+
+See [`FUTURE_WORK.md`](FUTURE_WORK.md) for planned enhancements, including:
+
+- **Metric–issue correlation:** Link metric spikes to generated issues for realistic cause-effect testing.
+- **Extended endpoints:** Add alert definitions, releases, and SLO metadata.
+- **Visualization examples:** Jupyter notebooks and dashboards consuming `metrics_timeseries.jsonl`.
+
 ## Notes
 
 - Values are synthetic and randomized for realism (e.g., latency spikes, error rates).
