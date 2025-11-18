@@ -4,11 +4,19 @@ This repository generates synthetic data mimicking Instana Application Performan
 
 ## ✨ Highlights
 
-🎯 **v1.1.0 Production Ready** – 10 validated JSONL datasets (120 entities, 15 apps, 40 endpoints, 120 timeseries, 30 issues, topology graphs, alert configs, catalogs)  
+🎯 **v1.2.0 in Progress** – Adding website monitoring, logging, and synthetic checks to existing 10 datasets  
 ✅ **Zero Errors** – Comprehensive validation: JSON validity, schema compliance, cross-file consistency  
 🔗 **Cross-File Consistency** – Entity IDs match across all datasets; no orphaned references  
 📚 **Professional Documentation** – Complete usage guide, examples, and Future Work roadmap  
 🚀 **Ready to Use** – Download v1.1.0-instana-synthetic and start prototyping immediately
+
+## v1.2.0 in Progress
+
+See [`v1.2.0_CHECKLIST.md`](v1.2.0_CHECKLIST.md) for detailed progress on the upcoming release, including:
+
+- **Website Monitoring**: `website_config.jsonl`, `website_catalog.jsonl`, `website_metrics.jsonl`, `website_analyze.jsonl`
+- **Logging**: `logs.jsonl` with severity levels, correlation IDs, and entity references
+- **Synthetic Checks**: `synthetic_checks.jsonl` and `synthetic_runs.jsonl` for API/browser monitoring
 
 ## v1.1.0 Additions
 - **Topology graphs**: `infra_topology.jsonl` (infrastructure topology with nodes and edges), `app_topology.jsonl` (application topology)

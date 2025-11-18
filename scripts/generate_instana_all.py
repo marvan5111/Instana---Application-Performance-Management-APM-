@@ -47,6 +47,19 @@ def main():
     # Generate catalogs
     run_script("scripts/generate_catalogs.py", [])
 
+    # Generate website monitoring
+    run_script("scripts/generate_website_config.py", ["--count", "10"])
+    run_script("scripts/generate_website_catalog.py", [])
+    run_script("scripts/generate_website_metrics.py", ["--count", "10", "--minutes", "60"])
+    run_script("scripts/generate_website_analyze.py", ["--count", "10"])
+
+    # Generate logging
+    run_script("scripts/generate_logs.py", ["--count", "100"])
+
+    # Generate synthetic checks
+    run_script("scripts/generate_synthetic_checks.py", ["--count", "20"])
+    run_script("scripts/generate_synthetic_runs.py", ["--count", "100"])
+
     print("All Instana synthetic data generated successfully!")
 
 if __name__ == "__main__":

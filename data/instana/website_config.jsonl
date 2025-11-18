@@ -1,0 +1,3 @@
+{"website_id": "web-888412", "url": "https://example.com", "check_interval_seconds": 300, "timeout_ms": 8576, "expected_status_codes": [200, 201, 202], "alert_on_failure": false, "tags": ["env:staging", "env:prod"]}
+{"website_id": "web-404839", "url": "https://checkout.example.com", "check_interval_seconds": 60, "timeout_ms": 10961, "expected_status_codes": [200, 201, 202], "alert_on_failure": false, "tags": ["env:prod", "region:us"]}
+{"website_id": "web-159470", "url": "https://example.com", "check_interval_seconds": 300, "timeout_ms": 6253, "expected_status_codes": [200, 201, 202], "alert_on_failure": true, "tags": ["env:staging", "region:us"]}

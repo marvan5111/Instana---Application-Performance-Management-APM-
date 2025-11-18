@@ -211,4 +211,120 @@ if missing_alerts:
 else:
     print('All alert config entity_ids are valid.')
 
+# Validate website_config.jsonl
+print("\nValidating website_config.jsonl...")
+count = 0
+with open('data/instana/website_config.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'website_config.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/website_config.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample website config keys: {list(sample.keys())}')
+
+# Validate website_catalog.jsonl
+print("\nValidating website_catalog.jsonl...")
+count = 0
+with open('data/instana/website_catalog.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'website_catalog.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/website_catalog.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample website catalog keys: {list(sample.keys())}')
+        if 'websites' in sample:
+            print(f'Websites count: {len(sample["websites"])}')
+
+# Validate website_metrics.jsonl
+print("\nValidating website_metrics.jsonl...")
+count = 0
+with open('data/instana/website_metrics.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'website_metrics.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/website_metrics.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample website metrics keys: {list(sample.keys())}')
+        if 'points' in sample:
+            print(f'Points count: {len(sample["points"])}')
+
+# Validate website_analyze.jsonl
+print("\nValidating website_analyze.jsonl...")
+count = 0
+with open('data/instana/website_analyze.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'website_analyze.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/website_analyze.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample website analyze keys: {list(sample.keys())}')
+
+# Validate logs.jsonl
+print("\nValidating logs.jsonl...")
+count = 0
+with open('data/instana/logs.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'logs.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/logs.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample log keys: {list(sample.keys())}')
+
+# Validate synthetic_checks.jsonl
+print("\nValidating synthetic_checks.jsonl...")
+count = 0
+with open('data/instana/synthetic_checks.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'synthetic_checks.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/synthetic_checks.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample synthetic check keys: {list(sample.keys())}')
+
+# Validate synthetic_runs.jsonl
+print("\nValidating synthetic_runs.jsonl...")
+count = 0
+with open('data/instana/synthetic_runs.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'synthetic_runs.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/synthetic_runs.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample synthetic run keys: {list(sample.keys())}')
+
+# Cross-file consistency for synthetic checks and runs
+print("\nCross-file consistency for synthetic checks and runs...")
+check_ids = set()
+with open('data/instana/synthetic_checks.jsonl') as f:
+    for line in f:
+        data = json.loads(line)
+        check_ids.add(data['check_id'])
+
+missing_runs = set()
+with open('data/instana/synthetic_runs.jsonl') as f:
+    for line in f:
+        data = json.loads(line)
+        cid = data.get('check_id')
+        if cid and cid not in check_ids:
+            missing_runs.add(cid)
+
+if missing_runs:
+    print(f'ERROR: Synthetic runs reference non-existent checks: {missing_runs}')
+else:
+    print('All synthetic runs reference valid checks.')
+
 print("\nValidation complete.")

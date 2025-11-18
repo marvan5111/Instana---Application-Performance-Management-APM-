@@ -177,7 +177,7 @@ This document outlines planned enhancements and improvements for the Instana APM
 |---------|--------|-------|
 | v1.0.0  | Done   | Core synthetic datasets, validation, documentation |
 | v1.1.0  | Done   | Topology graphs, alert configs, metrics catalog, entity types |
-| v1.2.0  | Q4 2025 | Website monitoring, mobile monitoring, logging, synthetic checks |
+| v1.2.0  | Current | Website monitoring, mobile monitoring, logging, synthetic checks |
 | v1.3.0  | Q1 2026 | Metric–issue correlation, releases, visualization examples |
 | v2.0.0  | H2 2026 | Cloud-native export, full integration suite |
 

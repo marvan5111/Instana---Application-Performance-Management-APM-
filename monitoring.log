@@ -1,0 +1,68 @@
+[2025-11-18 17:46:26] [INFO] Website check passed for https://example.com
+[2025-11-18 17:46:26] [WARNING] Slow response detected for https://api.example.com
+[2025-11-18 17:46:26] [ERROR] Timeout occurred for https://example.com
+[2025-11-18 17:46:26] [DEBUG] Debug information: response time 250ms
+[2025-11-18 17:47:49] [INFO] Website check passed for https://httpbin.org/status/200 - Status: 200, Response time: 2236ms
+[2025-11-18 17:47:51] [WARNING] Website check failed for https://httpbin.org/status/404 - Expected [200], got 404, Response time: 1889ms
+[2025-11-18 17:48:20] [INFO] Synthetic check passed for https://httpbin.org/get - Status: 200, Duration: 1494ms
+[2025-11-18 17:48:23] [INFO] Synthetic check passed for https://httpbin.org/post - Status: 200, Duration: 2529ms
+[2025-11-18 17:48:49] [INFO] Monitoring config validation passed
+[2025-11-18 17:48:49] [ERROR] Config validation error: URL must be a string starting with http:// or https://
+[2025-11-18 17:48:49] [ERROR] Config validation error: check_interval_seconds must be a positive integer
+[2025-11-18 17:48:49] [ERROR] Config validation error: timeout_ms must be a positive integer
+[2025-11-18 17:48:49] [ERROR] Config validation error: expected_status_codes must be a list of valid HTTP status codes (100-599)
+[2025-11-18 17:48:49] [ERROR] Config validation error: alert_on_failure must be a boolean
+[2025-11-18 17:51:21] [INFO] Testing monitoring integration with generated configs
+[2025-11-18 17:51:21] [INFO] Validating config for https://example.com
+[2025-11-18 17:51:21] [INFO] Monitoring config validation passed
+[2025-11-18 17:51:21] [INFO] Running check for https://example.com
+[2025-11-18 17:51:23] [INFO] Website check passed for https://example.com - Status: 200, Response time: 2138ms
+[2025-11-18 17:51:23] [INFO] Testing synthetic integration with generated checks
+[2025-11-18 17:51:23] [INFO] Running synthetic check for https://api.example.com/user
+[2025-11-18 17:51:23] [ERROR] Synthetic check request failed for https://api.example.com/user: HTTPSConnectionPool(host='api.example.com', port=443): Max retries exceeded with url: /user (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x000001AE3B94B250>: Failed to resolve 'api.example.com' ([Errno 11001] getaddrinfo failed)"))
+[2025-11-18 17:51:52] [INFO] Testing invalid config validation
+[2025-11-18 17:51:52] [INFO] Testing invalid config 1
+[2025-11-18 17:51:52] [ERROR] Config validation error: URL must be a string starting with http:// or https://
+[2025-11-18 17:51:52] [INFO] Testing invalid config 2
+[2025-11-18 17:51:52] [ERROR] Config validation error: check_interval_seconds must be a positive integer
+[2025-11-18 17:51:52] [INFO] Testing invalid config 3
+[2025-11-18 17:51:52] [ERROR] Config validation error: timeout_ms must be a positive integer
+[2025-11-18 17:51:52] [INFO] Testing invalid config 4
+[2025-11-18 17:51:52] [ERROR] Config validation error: expected_status_codes must be a list of valid HTTP status codes (100-599)
+[2025-11-18 17:51:52] [INFO] Testing invalid config 5
+[2025-11-18 17:51:52] [ERROR] Config validation error: alert_on_failure must be a boolean
+[2025-11-18 17:51:52] [INFO] Invalid config tests passed
+[2025-11-18 17:51:52] [INFO] Testing timeout scenarios
+[2025-11-18 17:51:52] [INFO] Testing timeout scenario
+[2025-11-18 17:51:53] [ERROR] Timeout occurred for https://httpbin.org/delay/5 after 1.0s
+[2025-11-18 17:51:53] [INFO] Testing malformed response handling
+[2025-11-18 17:51:53] [INFO] Testing malformed response scenario
+[2025-11-18 17:51:56] [WARNING] Website check failed for https://httpbin.org/status/500 - Expected [200], got 500, Response time: 3236ms
+[2025-11-18 17:51:56] [INFO] Edge case testing completed
+[2025-11-18 18:00:15] [INFO] Testing monitoring integration with generated configs
+[2025-11-18 18:00:15] [INFO] Validating config for https://example.com
+[2025-11-18 18:00:15] [INFO] Monitoring config validation passed
+[2025-11-18 18:00:15] [INFO] Running check for https://example.com
+[2025-11-18 18:00:17] [INFO] Website check passed for https://example.com - Status: 200, Response time: 2070ms
+[2025-11-18 18:00:17] [INFO] Testing synthetic integration with generated checks
+[2025-11-18 18:00:17] [INFO] Running synthetic check for https://api.example.com/user
+[2025-11-18 18:00:18] [ERROR] Synthetic check request failed for https://api.example.com/user: HTTPSConnectionPool(host='api.example.com', port=443): Max retries exceeded with url: /user (Caused by NameResolutionError("<urllib3.connection.HTTPSConnection object at 0x0000022708B1B250>: Failed to resolve 'api.example.com' ([Errno 11001] getaddrinfo failed)"))
+[2025-11-18 18:00:26] [INFO] Testing invalid config validation
+[2025-11-18 18:00:26] [INFO] Testing invalid config 1
+[2025-11-18 18:00:26] [ERROR] Config validation error: URL must be a string starting with http:// or https://
+[2025-11-18 18:00:26] [INFO] Testing invalid config 2
+[2025-11-18 18:00:26] [ERROR] Config validation error: check_interval_seconds must be a positive integer
+[2025-11-18 18:00:26] [INFO] Testing invalid config 3
+[2025-11-18 18:00:26] [ERROR] Config validation error: timeout_ms must be a positive integer
+[2025-11-18 18:00:26] [INFO] Testing invalid config 4
+[2025-11-18 18:00:26] [ERROR] Config validation error: expected_status_codes must be a list of valid HTTP status codes (100-599)
+[2025-11-18 18:00:26] [INFO] Testing invalid config 5
+[2025-11-18 18:00:26] [ERROR] Config validation error: alert_on_failure must be a boolean
+[2025-11-18 18:00:26] [INFO] Invalid config tests passed
+[2025-11-18 18:00:26] [INFO] Testing timeout scenarios
+[2025-11-18 18:00:26] [INFO] Testing timeout scenario
+[2025-11-18 18:00:28] [ERROR] Timeout occurred for https://httpbin.org/delay/5 after 1.0s
+[2025-11-18 18:00:28] [INFO] Testing malformed response handling
+[2025-11-18 18:00:28] [INFO] Testing malformed response scenario
+[2025-11-18 18:00:29] [WARNING] Website check failed for https://httpbin.org/status/500 - Expected [200], got 500, Response time: 1606ms
+[2025-11-18 18:00:29] [INFO] Edge case testing completed

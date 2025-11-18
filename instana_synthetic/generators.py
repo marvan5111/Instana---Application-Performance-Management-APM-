@@ -175,3 +175,128 @@ def write_jsonl(path, records):
     with open(path, "w", encoding="utf-8") as f:
         for r in records:
             f.write(json.dumps(r) + "\n")
+
+# Website Monitoring Generators
+def gen_website_config(i):
+    return {
+        "website_id": f"web-{random.randint(100000,999999)}",
+        "url": random.choice([
+            "https://example.com",
+            "https://api.example.com/health",
+            "https://checkout.example.com",
+            "https://search.example.com"
+        ]),
+        "check_interval_seconds": random.choice([30, 60, 120, 300]),
+        "timeout_ms": random.randint(5000, 15000),
+        "expected_status_codes": [200, 201, 202],
+        "alert_on_failure": random.choice([True, False]),
+        "tags": random.sample(["env:prod", "env:staging", "region:us", "region:eu"], k=2)
+    }
+
+def gen_website_catalog():
+    websites = [
+        {
+            "website_id": f"web-{random.randint(100000,999999)}",
+            "name": "Example Homepage",
+            "url": "https://example.com",
+            "description": "Main website homepage",
+            "tags": ["env:prod", "type:homepage"]
+        },
+        {
+            "website_id": f"web-{random.randint(100000,999999)}",
+            "name": "API Health Check",
+            "url": "https://api.example.com/health",
+            "description": "API health endpoint",
+            "tags": ["env:prod", "type:api"]
+        }
+    ]
+    return {"websites": websites}
+
+def gen_website_metrics(website_id, minutes=60):
+    to = now_ms()
+    frm = to - minutes * 60_000
+    points = []
+    val = random.randint(200, 500)  # response time ms
+    for t in range(frm, to, 60_000):  # every minute
+        val += random.randint(-50, 100)
+        if random.random() < 0.1:  # occasional spikes
+            val += random.randint(500, 2000)
+        points.append({"timestamp": t, "value": max(100, val)})
+    return {
+        "website_id": website_id,
+        "metric_name": "response_time_ms",
+        "aggregation": "avg",
+        "timeframe": {"from": frm, "to": to, "step_ms": 60000},
+        "points": points
+    }
+
+def gen_website_analyze(website_id):
+    return {
+        "website_id": website_id,
+        "snapshot_id": f"snap-{random.randint(10**12, 10**13-1)}",
+        "timestamp": now_ms(),
+        "response_time_ms": random.randint(150, 2000),
+        "status_code": random.choice([200, 201, 404, 500]),
+        "error_message": None if random.random() < 0.8 else "Connection timeout",
+        "page_views": random.randint(1000, 10000),
+        "unique_visitors": random.randint(500, 5000),
+        "availability": round(random.uniform(0.95, 1.0), 3),
+        "issues": [gen_issue(website_id) for _ in range(random.randint(0, 2))]
+    }
+
+# Logging Generators
+def gen_log_entry(entity_ids=None):
+    entity_id = random.choice(entity_ids) if entity_ids else f"srv-{random.randint(10000000,99999999)}"
+    severity_levels = ["DEBUG", "INFO", "WARN", "ERROR", "FATAL"]
+    severity = random.choices(severity_levels, weights=[40, 30, 20, 8, 2])[0]
+    return {
+        "timestamp": now_ms() - random.randint(0, 86400000),  # up to 1 day ago
+        "severity": severity,
+        "message": random.choice([
+            "Request processed successfully",
+            "Database connection established",
+            "High memory usage detected",
+            "Failed to connect to external service",
+            "User authentication failed"
+        ]),
+        "entity_id": entity_id,
+        "correlation_id": f"corr-{random.randint(100000,999999)}",
+        "tags": random.sample(["env:prod", "env:staging", "team:core", "team:payments"], k=2),
+        "source": random.choice(["application", "infrastructure", "web"])
+    }
+
+# Synthetic Checks Generators
+def gen_synthetic_check(endpoint_ids=None):
+    endpoint_id = random.choice(endpoint_ids) if endpoint_ids else f"ep-{random.randint(100000,999999)}"
+    return {
+        "check_id": f"chk-{random.randint(100000,999999)}",
+        "name": f"Synthetic Check for {endpoint_id}",
+        "type": random.choice(["api", "browser"]),
+        "endpoint_id": endpoint_id,
+        "url": random.choice([
+            "https://api.example.com/checkout",
+            "https://api.example.com/search",
+            "https://api.example.com/user"
+        ]),
+        "method": random.choice(["GET", "POST"]),
+        "headers": {"Authorization": "Bearer token", "Content-Type": "application/json"},
+        "body": None if random.random() < 0.7 else '{"test": "data"}',
+        "expected_status": 200,
+        "timeout_ms": random.randint(5000, 10000),
+        "frequency_seconds": random.choice([60, 300, 600]),
+        "locations": random.sample(["us-east", "us-west", "eu-central", "ap-southeast"], k=2)
+    }
+
+def gen_synthetic_run(check_id):
+    success = random.random() < 0.9  # 90% success rate
+    return {
+        "run_id": f"run-{random.randint(100000,999999)}",
+        "check_id": check_id,
+        "timestamp": now_ms() - random.randint(0, 3600000),  # up to 1 hour ago
+        "duration_ms": random.randint(100, 5000),
+        "status": "success" if success else "failure",
+        "status_code": 200 if success else random.choice([404, 500, 502]),
+        "error_message": None if success else "Connection refused",
+        "location": random.choice(["us-east", "us-west", "eu-central", "ap-southeast"]),
+        "response_size_bytes": random.randint(100, 10000) if success else 0
+    }
