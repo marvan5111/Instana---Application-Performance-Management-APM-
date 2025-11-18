@@ -1,4 +1,6 @@
 import argparse, random
+import sys
+sys.path.insert(0, '.')
 from instana_synthetic.generators import gen_timeseries, write_jsonl
 
 def main():

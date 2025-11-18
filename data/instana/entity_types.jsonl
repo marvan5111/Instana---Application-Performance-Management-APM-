@@ -1,0 +1,1 @@
+{"entity_types": [{"type": "Service", "description": "Application service entity"}, {"type": "Host", "description": "Infrastructure host"}, {"type": "Container", "description": "Containerized entity"}, {"type": "MobileApp", "description": "Mobile application"}, {"type": "Website", "description": "Website monitoring"}]}

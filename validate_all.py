@@ -113,4 +113,102 @@ if missing_entities_issues:
 else:
     print('All issues entity_ids are valid.')
 
+# Validate infra_topology.jsonl
+print("\nValidating infra_topology.jsonl...")
+count = 0
+with open('data/instana/infra_topology.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'infra_topology.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/infra_topology.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample topology keys: {list(sample.keys())}')
+        if 'nodes' in sample:
+            print(f'Nodes count: {len(sample["nodes"])}')
+        if 'edges' in sample:
+            print(f'Edges count: {len(sample["edges"])}')
+
+# Validate app_topology.jsonl
+print("\nValidating app_topology.jsonl...")
+count = 0
+with open('data/instana/app_topology.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'app_topology.jsonl: Valid JSON, count: {count}')
+
+# Validate alert_configs.jsonl
+print("\nValidating alert_configs.jsonl...")
+count = 0
+with open('data/instana/alert_configs.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'alert_configs.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/alert_configs.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample alert keys: {list(sample.keys())}')
+
+# Validate metrics_catalog.jsonl
+print("\nValidating metrics_catalog.jsonl...")
+count = 0
+with open('data/instana/metrics_catalog.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'metrics_catalog.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/metrics_catalog.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample catalog keys: {list(sample.keys())}')
+        if 'metrics' in sample:
+            print(f'Metrics count: {len(sample["metrics"])}')
+
+# Validate entity_types.jsonl
+print("\nValidating entity_types.jsonl...")
+count = 0
+with open('data/instana/entity_types.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'entity_types.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/entity_types.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample types keys: {list(sample.keys())}')
+        if 'entity_types' in sample:
+            print(f'Types count: {len(sample["entity_types"])}')
+
+# Cross-file consistency for topology
+print("\nCross-file consistency for topology...")
+topo_entity_ids = set()
+with open('data/instana/infra_topology.jsonl') as f:
+    for line in f:
+        data = json.loads(line)
+        for node in data.get('nodes', []):
+            topo_entity_ids.add(node['id'])
+
+missing_topo = topo_entity_ids - entity_ids
+if missing_topo:
+    print(f'ERROR: Topology nodes reference non-existent entities: {missing_topo}')
+else:
+    print('All topology node IDs are valid.')
+
+# Cross-file consistency for alerts
+alert_entity_ids = set()
+with open('data/instana/alert_configs.jsonl') as f:
+    for line in f:
+        data = json.loads(line)
+        if 'entity_id' in data:
+            alert_entity_ids.add(data['entity_id'])
+
+missing_alerts = alert_entity_ids - entity_ids
+if missing_alerts:
+    print(f'ERROR: Alert configs reference non-existent entities: {missing_alerts}')
+else:
+    print('All alert config entity_ids are valid.')
+
 print("\nValidation complete.")

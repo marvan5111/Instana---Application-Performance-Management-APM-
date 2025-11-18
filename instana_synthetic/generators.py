@@ -94,11 +94,12 @@ def gen_endpoint(i):
         }
     }
 
-def gen_issue_record(i):
+def gen_issue_record(i, entity_ids=None):
     iid = f"ISS-{random.randint(100000,999999)}"
+    entity_id = random.choice(entity_ids) if entity_ids else f"srv-{random.randint(10000000,99999999)}"
     return {
         "issue_id": iid,
-        "entity_id": f"srv-{random.randint(10000000,99999999)}",
+        "entity_id": entity_id,
         "severity": random.choice([1,2,3,4,5]),
         "state": random.choice(["open","resolved","acknowledged"]),
         "start_time": now_ms() - random.randint(0, 86400000),  # up to 1 day ago
@@ -106,6 +107,69 @@ def gen_issue_record(i):
         "problem": random.choice(["High CPU","Memory Leak","Slow Queries","Network Timeout"]),
         "tags": random.sample(["env:prod","env:staging","team:core","team:payments"], k=2)
     }
+
+def gen_topology(entity_ids, is_infra=True):
+    nodes = [{"id": eid, "label": f"Node-{eid}", "type": random.choice(["Service","Host","Container"]) if is_infra else "Application"} for eid in random.sample(entity_ids, k=min(20, len(entity_ids)))]
+    edges = []
+    for i in range(len(nodes)-1):
+        edges.append({"from": nodes[i]["id"], "to": nodes[i+1]["id"], "weight": random.randint(1,10), "timestamp": now_ms()})
+    return {
+        "nodes": nodes,
+        "edges": edges,
+        "timestamp": now_ms()
+    }
+
+def gen_alert_config(entity_ids, config_type="app"):
+    if config_type == "app":
+        return {
+            "alert_id": f"ALERT-{random.randint(100000,999999)}",
+            "name": "Application Latency Alert",
+            "entity_id": random.choice(entity_ids),
+            "rule": {"metric": "latency_p95_ms", "operator": ">", "threshold": 500},
+            "severity": random.choice([1,2,3,4,5]),
+            "enabled": True,
+            "notification_channels": ["email", "slack"]
+        }
+    elif config_type == "infra":
+        return {
+            "alert_id": f"ALERT-{random.randint(100000,999999)}",
+            "name": "Infrastructure CPU Alert",
+            "entity_id": random.choice(entity_ids),
+            "rule": {"metric": "cpu_usage", "operator": ">", "threshold": 80},
+            "severity": random.choice([1,2,3,4,5]),
+            "enabled": True,
+            "notification_channels": ["email"]
+        }
+    else:  # synthetic
+        return {
+            "alert_id": f"ALERT-{random.randint(100000,999999)}",
+            "name": "Synthetic Check Failure",
+            "check_id": f"CHK-{random.randint(100000,999999)}",
+            "rule": {"failure_count": 3, "window_minutes": 5},
+            "severity": random.choice([1,2,3,4,5]),
+            "enabled": True,
+            "notification_channels": ["webhook"]
+        }
+
+def gen_metrics_catalog():
+    metrics = [
+        {"name": "latency_p95_ms", "unit": "ms", "aggregation": "p95", "description": "95th percentile latency"},
+        {"name": "error_rate", "unit": "%", "aggregation": "avg", "description": "Error rate percentage"},
+        {"name": "cpu_usage", "unit": "%", "aggregation": "avg", "description": "CPU usage"},
+        {"name": "memory_usage", "unit": "%", "aggregation": "avg", "description": "Memory usage"},
+        {"name": "req_per_min", "unit": "req/min", "aggregation": "sum", "description": "Requests per minute"}
+    ]
+    return {"metrics": metrics}
+
+def gen_entity_types():
+    types = [
+        {"type": "Service", "description": "Application service entity"},
+        {"type": "Host", "description": "Infrastructure host"},
+        {"type": "Container", "description": "Containerized entity"},
+        {"type": "MobileApp", "description": "Mobile application"},
+        {"type": "Website", "description": "Website monitoring"}
+    ]
+    return {"entity_types": types}
 
 def write_jsonl(path, records):
     with open(path, "w", encoding="utf-8") as f:

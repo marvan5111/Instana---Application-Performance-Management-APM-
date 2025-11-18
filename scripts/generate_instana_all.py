@@ -38,6 +38,15 @@ def main():
     # Generate timeseries (depends on entities)
     run_script("scripts/generate_timeseries.py", ["--minutes", "60"])
 
+    # Generate topology
+    run_script("scripts/generate_topology.py", [])
+
+    # Generate alert configs
+    run_script("scripts/generate_alert_configs.py", [])
+
+    # Generate catalogs
+    run_script("scripts/generate_catalogs.py", [])
+
     print("All Instana synthetic data generated successfully!")
 
 if __name__ == "__main__":

@@ -1,4 +1,6 @@
 import argparse
+import sys
+sys.path.insert(0, '.')
 from instana_synthetic.generators import gen_endpoint, write_jsonl
 
 def main():

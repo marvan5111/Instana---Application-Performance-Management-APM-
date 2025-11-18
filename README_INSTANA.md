@@ -4,11 +4,17 @@ This repository generates synthetic data mimicking Instana Application Performan
 
 ## ✨ Highlights
 
-🎯 **v1.0.0 Production Ready** – 5 validated JSONL datasets (120 entities, 15 apps, 40 endpoints, 120 timeseries, 30 issues)  
+🎯 **v1.1.0 Production Ready** – 10 validated JSONL datasets (120 entities, 15 apps, 40 endpoints, 120 timeseries, 30 issues, topology graphs, alert configs, catalogs)  
 ✅ **Zero Errors** – Comprehensive validation: JSON validity, schema compliance, cross-file consistency  
 🔗 **Cross-File Consistency** – Entity IDs match across all datasets; no orphaned references  
 📚 **Professional Documentation** – Complete usage guide, examples, and Future Work roadmap  
-🚀 **Ready to Use** – Download v1.0.0-instana-synthetic and start prototyping immediately
+🚀 **Ready to Use** – Download v1.1.0-instana-synthetic and start prototyping immediately
+
+## v1.1.0 Additions
+- **Topology graphs**: `infra_topology.jsonl` (infrastructure topology with nodes and edges), `app_topology.jsonl` (application topology)
+- **Alert configurations**: `alert_configs.jsonl` (synthetic alert rules, thresholds, and notification channels)
+- **Metadata catalogs**: `metrics_catalog.jsonl` (available metrics with units and aggregations), `entity_types.jsonl` (available entity types)
+- **Validation**: All new files passed schema and cross-file consistency checks, ensuring realistic and linked data
 
 ## Quick Start Example
 
@@ -41,13 +47,13 @@ python validate_all.py
 ## Project Completion Note
 
 ✅ **All Objectives Achieved**
-- Generated synthetic datasets for 5 key Instana endpoints
+- Generated synthetic datasets for 10 key Instana endpoints
 - Ensured cross-file consistency (entity IDs match across datasets)
 - Comprehensive validation: JSON validity, schema compliance, record counts
 - All validation checks pass with no errors
 - Ready for QA harness and agentic AI workflows
 
-**Validation Summary**: All 5 datasets (120 entities, 15 apps, 40 endpoints, 120 timeseries, 30 issues) are valid JSONL with consistent entity references.
+**Validation Summary**: All 10 datasets (120 entities, 15 apps, 40 endpoints, 120 timeseries, 30 issues, topology graphs, alert configs, catalogs) are valid JSONL with consistent entity references.
 
 **Validation run (2025-11-17):** All validation checks executed via `validate_all.py` passed with no errors. See `validate_all.py` for reproducible validation steps and sample output.
 
@@ -59,6 +65,11 @@ Synthetic datasets for key Instana endpoints:
 - Endpoints (`/api/application-monitoring/endpoints`)
 - Metrics time series (`/api/metrics`)
 - Issues/incidents (`/api/events/issues`)
+- Infrastructure topology (`/api/infrastructure-monitoring/topology`)
+- Application topology (`/api/application-monitoring/topology`)
+- Alert configurations (`/api/settings/alerting/configurations`)
+- Metrics catalog (`/api/catalog/metrics`)
+- Entity types (`/api/catalog/entity-types`)
 
 Data is realistic but non-production, with plausible values, distributions, and relationships.
 
@@ -100,6 +111,11 @@ Files in `data/instana/`:
 - `endpoints.jsonl`: API endpoints, methods, performance metrics
 - `metrics_timeseries.jsonl`: Time-series data points for entities
 - `issues.jsonl`: Open/resolved issues with severity and timestamps
+- `infra_topology.jsonl`: Infrastructure topology graphs with nodes and edges
+- `app_topology.jsonl`: Application topology graphs with nodes and edges
+- `alert_configs.jsonl`: Alert configuration rules and thresholds
+- `metrics_catalog.jsonl`: Catalog of available metrics with metadata
+- `entity_types.jsonl`: Catalog of available entity types
 
 Each file is JSONL (one JSON object per line) for easy streaming.
 
@@ -168,7 +184,7 @@ python validate_all.py
 - **Schema Compliance**: Verify required keys and data types
 - **Cross-File Consistency**: Entity IDs match between related files (e.g., issues reference valid entities)
 
-### Validation Results (v1.0.0)
+### Validation Results (v1.1.0)
 
 ✅ **All validation checks passed** with zero errors.
 
@@ -180,6 +196,11 @@ python validate_all.py
 | Endpoints | `endpoints.jsonl` | 40 endpoints | ✅ Valid |
 | Metrics Time Series | `metrics_timeseries.jsonl` | 120 series (60 points each) | ✅ Valid |
 | Issues/Incidents | `issues.jsonl` | 30 issues | ✅ Valid |
+| Infra Topology | `infra_topology.jsonl` | 1 graph (20 nodes, 19 edges) | ✅ Valid |
+| App Topology | `app_topology.jsonl` | 1 graph | ✅ Valid |
+| Alert Configs | `alert_configs.jsonl` | 25 configs | ✅ Valid |
+| Metrics Catalog | `metrics_catalog.jsonl` | 1 catalog (5 metrics) | ✅ Valid |
+| Entity Types | `entity_types.jsonl` | 1 catalog (5 types) | ✅ Valid |
 
 **Cross-File Consistency:**
 - ✅ Found 120 unique `entity_ids` in `infrastructure_entities.jsonl`
@@ -188,7 +209,7 @@ python validate_all.py
 - ✅ No orphaned references or data integrity issues
 
 **Full Validation Log:**
-Download the complete validation log from the [v1.0.0-instana-synthetic Release](https://github.com/marvan5111/Instana---Application-Performance-Management-APM-/releases/tag/v1.0.0-instana-synthetic) (attached as `validation_log.txt`).
+Download the complete validation log from the [v1.1.0-instana-synthetic Release](https://github.com/marvan5111/Instana---Application-Performance-Management-APM-/releases/tag/v1.1.0-instana-synthetic) (attached as `validation_log.txt`).
 
 ## Future Work
 

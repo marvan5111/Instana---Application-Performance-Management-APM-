@@ -1,4 +1,6 @@
 import argparse
+import sys
+sys.path.insert(0, '.')
 from instana_synthetic.generators import rand_timeframe, gen_entity, write_jsonl
 
 def main():
