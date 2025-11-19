@@ -1,29 +1,30 @@
-# TODO for v1.2.0 Implementation
+# TODO for v1.3.0 Deployment and Monitoring
 
-## 1. Website Monitoring
-- [x] Add generator functions to `instana_synthetic/generators.py` for website_config, website_catalog, website_metrics, website_analyze
-- [x] Create `scripts/generate_website_config.py` to generate `website_config.jsonl`
-- [x] Create `scripts/generate_website_catalog.py` to generate `website_catalog.jsonl`
-- [x] Create `scripts/generate_website_metrics.py` to generate `website_metrics.jsonl`
-- [x] Create `scripts/generate_website_analyze.py` to generate `website_analyze.jsonl`
+## Deployment
+- [ ] Initialize git repository
+- [ ] Add all project files to git
+- [ ] Commit changes with message "Prepare for v1.3.0 deployment"
+- [ ] Install Heroku CLI
+- [ ] Login to Heroku
+- [ ] Create Heroku app named "instana-apm-dashboard"
+- [ ] Set environment variables: DASH_USERNAME=admin, DASH_PASSWORD=securepassword, SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
+- [ ] Add Heroku remote
+- [ ] Push code to Heroku
+- [ ] Scale web dyno to 1
+- [ ] Open Heroku app to verify deployment
 
-## 2. Logging
-- [x] Add generator function to `instana_synthetic/generators.py` for logs
-- [x] Create `scripts/generate_logs.py` to generate `logs.jsonl`
+## Monitoring in Production
+- [ ] Add Heroku scheduler addon
+- [ ] Schedule data generation: python scripts/generate_instana_all.py --seed 42 --entities 120 --apps 15 --services 40 --issues 30 every hour
+- [ ] Verify logs update in real time (check Heroku logs)
+- [ ] Confirm alerts are sent (test with sample data)
+- [ ] Validate alert thresholds under load
 
-## 3. Synthetic Checks
-- [x] Add generator functions to `instana_synthetic/generators.py` for synthetic_checks and synthetic_runs
-- [x] Create `scripts/generate_synthetic_checks.py` to generate `synthetic_checks.jsonl`
-- [x] Create `scripts/generate_synthetic_runs.py` to generate `synthetic_runs.jsonl`
+## Feedback & Iteration
+- [ ] Share live dashboard URL with teammates
+- [ ] Gather usability feedback on navigation, chart clarity, alert usefulness
+- [ ] Track issues in GitHub repository
 
-## 4. Update Validation
-- [x] Update `validate_all.py` to include validation for new JSONL files
-- [x] Add cross-file consistency checks for new files
-
-## 5. Update Documentation
-- [x] Update `README_INSTANA.md` to add “v1.2.0 in progress” section with checklist link and planned files
-- [x] Update `v1.2.0_CHECKLIST.md` to mark completed items
-
-## 6. Integration
-- [x] Update `scripts/generate_instana_all.py` to include new generators
-- [x] Test generation and validation
+## Portfolio & LinkedIn Update
+- [ ] Post v1.3.0 announcement on LinkedIn using drafted post
+- [ ] Update portfolio with v1.3.0 milestone

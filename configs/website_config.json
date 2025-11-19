@@ -1,0 +1,31 @@
+[
+  {
+    "website_id": "homepage",
+    "url": "https://example.com",
+    "check_interval_seconds": 60,
+    "timeout_ms": 5000,
+    "expected_status_codes": [
+      200,
+      201
+    ],
+    "alert_on_failure": true,
+    "tags": [
+      "env:prod",
+      "type:homepage"
+    ]
+  },
+  {
+    "website_id": "api-health",
+    "url": "https://api.example.com/health",
+    "check_interval_seconds": 30,
+    "timeout_ms": 3000,
+    "expected_status_codes": [
+      200
+    ],
+    "alert_on_failure": true,
+    "tags": [
+      "env:prod",
+      "type:api"
+    ]
+  }
+]

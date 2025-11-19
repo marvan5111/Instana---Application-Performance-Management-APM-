@@ -1,0 +1,30 @@
+[
+  {
+    "mobile_app_id": "ecommerce-ios",
+    "platform": "iOS",
+    "version": "1.2.3",
+    "bundle_id": "com.example.ecommerce",
+    "check_interval_seconds": 300,
+    "crash_threshold": 0.05,
+    "response_time_threshold_ms": 2000,
+    "alert_on_crash": true,
+    "tags": [
+      "env:prod",
+      "platform:ios"
+    ]
+  },
+  {
+    "mobile_app_id": "ecommerce-android",
+    "platform": "Android",
+    "version": "2.1.0",
+    "package_name": "com.example.ecommerce",
+    "check_interval_seconds": 300,
+    "crash_threshold": 0.03,
+    "response_time_threshold_ms": 2500,
+    "alert_on_crash": true,
+    "tags": [
+      "env:prod",
+      "platform:android"
+    ]
+  }
+]

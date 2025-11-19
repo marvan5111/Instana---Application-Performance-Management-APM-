@@ -300,3 +300,79 @@ def gen_synthetic_run(check_id):
         "location": random.choice(["us-east", "us-west", "eu-central", "ap-southeast"]),
         "response_size_bytes": random.randint(100, 10000) if success else 0
     }
+
+# Mobile Monitoring Generators
+def gen_mobile_config(i):
+    platforms = ["iOS", "Android"]
+    platform = random.choice(platforms)
+    config = {
+        "mobile_app_id": f"mobile-{random.randint(100000,999999)}",
+        "platform": platform,
+        "version": f"{random.randint(1,5)}.{random.randint(0,9)}.{random.randint(0,9)}",
+        "check_interval_seconds": random.choice([300, 600, 900]),
+        "crash_threshold": round(random.uniform(0.01, 0.1), 3),
+        "response_time_threshold_ms": random.randint(1000, 5000),
+        "alert_on_crash": random.choice([True, False]),
+        "tags": random.sample(["env:prod", "env:staging", "platform:" + platform.lower(), "region:us", "region:eu"], k=2)
+    }
+    if platform == "iOS":
+        config["bundle_id"] = f"com.example.app{random.randint(1,100)}"
+    else:
+        config["package_name"] = f"com.example.app{random.randint(1,100)}"
+    return config
+
+def gen_mobile_catalog():
+    apps = [
+        {
+            "mobile_app_id": f"mobile-{random.randint(100000,999999)}",
+            "name": "E-commerce Mobile App",
+            "platform": "iOS",
+            "description": "Main mobile app for e-commerce",
+            "tags": ["env:prod", "platform:ios"]
+        },
+        {
+            "mobile_app_id": f"mobile-{random.randint(100000,999999)}",
+            "name": "E-commerce Android App",
+            "platform": "Android",
+            "description": "Android version of e-commerce app",
+            "tags": ["env:prod", "platform:android"]
+        }
+    ]
+    return {"mobile_apps": apps}
+
+def gen_mobile_metrics(mobile_app_id, minutes=60):
+    to = now_ms()
+    frm = to - minutes * 60_000
+    points = []
+    crash_rate = random.uniform(0.001, 0.05)  # crash rate
+    response_time = random.randint(500, 3000)  # ms
+    for t in range(frm, to, 60_000):  # every minute
+        crash_rate += random.uniform(-0.005, 0.01)
+        crash_rate = max(0.0001, min(0.1, crash_rate))
+        response_time += random.randint(-200, 400)
+        response_time = max(100, response_time)
+        points.append({"timestamp": t, "crash_rate": round(crash_rate, 4), "response_time_ms": response_time})
+    return {
+        "mobile_app_id": mobile_app_id,
+        "metric_name": "mobile_performance",
+        "aggregation": "avg",
+        "timeframe": {"from": frm, "to": to, "step_ms": 60000},
+        "points": points
+    }
+
+def gen_mobile_analyze(mobile_app_id):
+    return {
+        "mobile_app_id": mobile_app_id,
+        "snapshot_id": f"snap-{random.randint(10**12, 10**13-1)}",
+        "timestamp": now_ms(),
+        "platform": random.choice(["iOS", "Android"]),
+        "version": f"{random.randint(1,5)}.{random.randint(0,9)}.{random.randint(0,9)}",
+        "crash_count": random.randint(0, 50),
+        "crash_rate": round(random.uniform(0.001, 0.05), 4),
+        "avg_response_time_ms": random.randint(500, 3000),
+        "user_sessions": random.randint(1000, 10000),
+        "active_users": random.randint(500, 5000),
+        "battery_drain_percent": round(random.uniform(1.0, 10.0), 2),
+        "memory_usage_mb": random.randint(50, 500),
+        "issues": [gen_issue(mobile_app_id) for _ in range(random.randint(0, 2))]
+    }

@@ -1,0 +1,7 @@
+ dash
+ pandas
+ plotly
+ gunicorn
+ requests
+ slack_sdk
+ dash-auth

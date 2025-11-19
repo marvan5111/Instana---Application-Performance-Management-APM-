@@ -1,0 +1,22 @@
+{
+  "email": {
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587,
+    "username": "",
+    "password": "",
+    "from_email": "",
+    "to_emails": []
+  },
+  "slack": {
+    "token": "",
+    "channel": "#alerts"
+  },
+  "thresholds": {
+    "website_response_time_ms": 5000,
+    "synthetic_failure_count": 3,
+    "synthetic_failure_window_minutes": 5,
+    "error_rate_threshold": 0.05,
+    "mobile_crash_rate": 0.05,
+    "mobile_response_time_ms": 2500
+  }
+}

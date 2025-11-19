@@ -1,49 +1,38 @@
 # Instana APM Synthetic Data Generator
 
-This repository generates synthetic data mimicking Instana Application Performance Management (APM) REST API responses. Useful for prototyping, testing, and development workflows.
+This repository provides an end-to-end operational intelligence platform, featuring a synthetic data generator that mimics Instana APM responses, a real-time monitoring dashboard, and a proactive alerting system. It is a portfolio-grade project demonstrating full-stack Python development.
 
 ## ✨ Highlights
 
-🎯 **v1.2.0 in Progress** – Adding website monitoring, logging, and synthetic checks to existing 10 datasets  
-✅ **Zero Errors** – Comprehensive validation: JSON validity, schema compliance, cross-file consistency  
-🔗 **Cross-File Consistency** – Entity IDs match across all datasets; no orphaned references  
-📚 **Professional Documentation** – Complete usage guide, examples, and Future Work roadmap  
-🚀 **Ready to Use** – Download v1.1.0-instana-synthetic and start prototyping immediately
-
-## v1.2.0 in Progress
-
-See [`v1.2.0_CHECKLIST.md`](v1.2.0_CHECKLIST.md) for detailed progress on the upcoming release, including:
-
-- **Website Monitoring**: `website_config.jsonl`, `website_catalog.jsonl`, `website_metrics.jsonl`, `website_analyze.jsonl`
-- **Logging**: `logs.jsonl` with severity levels, correlation IDs, and entity references
-- **Synthetic Checks**: `synthetic_checks.jsonl` and `synthetic_runs.jsonl` for API/browser monitoring
-
-## v1.1.0 Additions
-- **Topology graphs**: `infra_topology.jsonl` (infrastructure topology with nodes and edges), `app_topology.jsonl` (application topology)
-- **Alert configurations**: `alert_configs.jsonl` (synthetic alert rules, thresholds, and notification channels)
-- **Metadata catalogs**: `metrics_catalog.jsonl` (available metrics with units and aggregations), `entity_types.jsonl` (available entity types)
-- **Validation**: All new files passed schema and cross-file consistency checks, ensuring realistic and linked data
+🎯 **v1.3.0: Full Operational Intelligence Platform**
+- **Interactive Dashboard**: A real-time monitoring dashboard built with Plotly Dash, visualizing metrics for websites, mobile apps, synthetic checks, and logs.
+- **Proactive Alerting**: A configurable alerting system that sends notifications via Slack and email for performance degradation or failures.
+- **Advanced Synthetic Monitoring**: Simulates multi-step user journeys (e.g., login → search → checkout) to validate critical application flows.
+- **Comprehensive Data Generation**: Generates 16+ validated datasets covering infrastructure, applications, mobile, synthetics, and logging.
+- **Secure & Deployable**: Includes basic authentication and is configured for production deployment on platforms like Heroku, AWS, or Azure.
 
 ## Quick Start Example
 
 ```python
 import json
 
-# Load and inspect metrics time series
-with open("data/instana/metrics_timeseries.jsonl") as f:
-    for i, line in enumerate(f):
-        if i >= 3:
-            break
-        record = json.loads(line)
-        print(f"Entity: {record['entity_id']}, Metric: {record['metric_name']}")
-        print(f"  Points: {len(record['points'])} samples\n")
+# To run the dashboard locally:
+# 1. Install dependencies
+#    pip install -r requirements.txt
+#
+# 2. Run the dashboard application
+#    python dashboard.py
+#
+# The dashboard will be available at http://127.0.0.1:8050
+# Default credentials: admin / instana
 
 # Load infrastructure entities
 with open("data/instana/infrastructure_entities.jsonl") as f:
-    data = json.load(f)
-    print(f"Total entities: {data['total_hits']}")
-    for entity in data['items'][:3]:
-        print(f"  - {entity['label']} ({entity['entity_type']}): {entity['metrics']}")
+    # This is a JSON file, not JSONL, so we load it at once.
+    data = json.load(f) 
+    print(f"Total entities: {data.get('total_hits', 0)}")
+    for entity in data.get('items', [])[:3]:
+        print(f"  - {entity.get('label')} ({entity.get('entity_type')})")
 ```
 
 **Generate fresh data:**

@@ -18,20 +18,14 @@ if count > 0:
 # Validate infrastructure_entities.jsonl
 print("\nValidating infrastructure_entities.jsonl...")
 count = 0
-with open('data/instana/infrastructure_entities.jsonl') as f:
-    for line in f:
-        json.loads(line)
-        count += 1
-print(f'infrastructure_entities.jsonl: Valid JSON, count: {count}')
+with open('data/instana/infrastructure_entities.jsonl', 'r') as f:
+    data = json.load(f)
+    count = len(data.get('items', []))
+print(f'infrastructure_entities.jsonl: Valid JSON, item count: {count}')
 if count > 0:
-    with open('data/instana/infrastructure_entities.jsonl') as f:
-        sample = json.loads(next(f))
-        print(f'Sample entity keys: {list(sample.keys())}')
-        if 'items' in sample:
-            print(f'Items count: {len(sample["items"])}')
-            if sample['items']:
-                item = sample['items'][0]
-                print(f'First item keys: {list(item.keys())}')
+    print(f'Sample entity keys: {list(data.keys())}')
+    if data.get('items'):
+        print(f'First item keys: {list(data["items"][0].keys())}')
 
 # Validate applications.jsonl
 print("\nValidating applications.jsonl...")
@@ -78,10 +72,9 @@ print("\nCross-file consistency checks...")
 # Load entity_ids from infrastructure_entities.jsonl
 entity_ids = set()
 with open('data/instana/infrastructure_entities.jsonl') as f:
-    for line in f:
-        data = json.loads(line)
-        for item in data.get('items', []):
-            entity_ids.add(item['entity_id'])
+    data = json.load(f)
+    for item in data.get('items', []):
+        entity_ids.add(item['entity_id'])
 
 print(f'Found {len(entity_ids)} unique entity_ids in infrastructure_entities.jsonl')
 
@@ -326,5 +319,61 @@ if missing_runs:
     print(f'ERROR: Synthetic runs reference non-existent checks: {missing_runs}')
 else:
     print('All synthetic runs reference valid checks.')
+
+# Validate mobile_config.jsonl
+print("\nValidating mobile_config.jsonl...")
+count = 0
+with open('data/instana/mobile_config.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'mobile_config.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/mobile_config.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample mobile config keys: {list(sample.keys())}')
+
+# Validate mobile_catalog.jsonl
+print("\nValidating mobile_catalog.jsonl...")
+count = 0
+with open('data/instana/mobile_catalog.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'mobile_catalog.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/mobile_catalog.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample mobile catalog keys: {list(sample.keys())}')
+        if 'mobile_apps' in sample:
+            print(f'Mobile apps count: {len(sample["mobile_apps"])}')
+
+# Validate mobile_metrics.jsonl
+print("\nValidating mobile_metrics.jsonl...")
+count = 0
+with open('data/instana/mobile_metrics.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'mobile_metrics.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/mobile_metrics.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample mobile metrics keys: {list(sample.keys())}')
+        if 'points' in sample:
+            print(f'Points count: {len(sample["points"])}')
+
+# Validate mobile_analyze.jsonl
+print("\nValidating mobile_analyze.jsonl...")
+count = 0
+with open('data/instana/mobile_analyze.jsonl') as f:
+    for line in f:
+        json.loads(line)
+        count += 1
+print(f'mobile_analyze.jsonl: Valid JSON, count: {count}')
+if count > 0:
+    with open('data/instana/mobile_analyze.jsonl') as f:
+        sample = json.loads(next(f))
+        print(f'Sample mobile analyze keys: {list(sample.keys())}')
 
 print("\nValidation complete.")
