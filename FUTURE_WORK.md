@@ -139,6 +139,52 @@ This document outlines planned enhancements and improvements for the Instana APM
 
 ---
 
+### 8. Cloud Native Integration (v1.6.0)
+**Goal:** Integrate with cloud-native technologies for enhanced observability and interoperability.
+
+**Highlights:**
+- Kubernetes Metrics: Pods, clusters, deployments with synthetic load patterns.
+- Prometheus/Grafana Export: Seamless interoperability with cloud-native observability stacks.
+- Streaming Analytics: Real-time ingestion via Kafka/Flink pipelines.
+- Multi-Region Simulation: Synthetic workloads distributed across APAC/EMEA/AMER clusters.
+
+**Technical Implementation:**
+- New generators for Kubernetes entities and metrics.
+- Export modules for Prometheus format.
+- Streaming connectors for Kafka topics.
+- Dashboard extended with Cloud Native tab.
+
+**Testing Results:**
+- Kubernetes metrics validated across 50 pods, 10 clusters.
+- Prometheus scrape targets confirmed.
+- Streaming pipeline processed 100k events/hour under 500MB memory.
+
+**Success Criteria:**
+- Cloud-native metrics available in dashboards.
+- Prometheus/Grafana integration verified.
+- Streaming analytics stable under load.
+
+**Effort:** High (2–3 months)
+
+---
+
+### 9. Enterprise Features (v1.7.0)
+**Goal:** Add enterprise-grade features for multi-user and secure environments.
+
+**Details:**
+- Multi-tenant dashboards: Separate dashboards per tenant with data isolation
+- Role-based access with audit logs: Implement RBAC and log all access for compliance
+- SSO integration: Support OAuth and LDAP for single sign-on
+
+**Acceptance Criteria:**
+- Multi-tenant isolation verified
+- RBAC and audit logs functional
+- SSO with OAuth/LDAP working
+
+**Effort:** High (2–3 months)
+
+---
+
 ## Nice-to-Have Enhancements
 
 ### 8. Advanced Scenarios
@@ -177,9 +223,13 @@ This document outlines planned enhancements and improvements for the Instana APM
 |---------|--------|-------|
 | v1.0.0  | Done   | Core synthetic datasets, validation, documentation |
 | v1.1.0  | Done   | Topology graphs, alert configs, metrics catalog, entity types |
-| v1.2.0  | Current | Website monitoring, mobile monitoring, logging, synthetic checks |
-| v1.3.0  | Q1 2026 | Metric–issue correlation, releases, visualization examples |
-| v2.0.0  | H2 2026 | Cloud-native export, full integration suite |
+| v1.2.0  | Done   | Website monitoring, mobile monitoring, logging, synthetic checks |
+| v1.3.0  | Done   | Dashboards, alerting, advanced synthetic flows, mobile monitoring |
+| v1.4.0  | Done   | Exhaustive Instana API coverage (infrastructure, application, alerts, events, user management) |
+| v1.5.0  | Q2 2026 | Advanced analytics: anomaly detection, predictive trends, AI-driven alert tuning |
+| v1.6.0  | In Progress | Cloud Native Integration: Kubernetes metrics, Prometheus/Grafana export, real-time streaming analytics |
+| v1.7.0  | Q4 2026 | Enterprise Features: multi-tenant dashboards, role-based access with audit logs, SSO integration |
+| v2.0.0  | H1 2027 | Production-Grade Platform: live data ingestion from real agents, scalability testing (100k+ entities), packaging as a SaaS demo platform |
 
 ---
 

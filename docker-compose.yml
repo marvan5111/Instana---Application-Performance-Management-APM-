@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  dashboard:
+    build: .
+    ports:
+      - "8050:8050"
+    environment:
+      - DASH_USERNAME=admin
+      - DASH_PASSWORD=instana
+      - DEFAULT_TENANT_ID=default
+      - ENABLE_RBAC=true
+      - SSO_PROVIDER=oauth2
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - DATA_REFRESH_INTERVAL=3600
+    volumes:
+      - ./data:/app/data
+      - ./configs:/app/configs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8050/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  data-generator:
+    build: .
+    command: >
+      sh -c "
+        while true; do
+          echo 'Generating fresh synthetic data...';
+          python scripts/generate_instana_all.py --seed 42 --entities 120 --apps 15 --services 40 --issues 30;
+          python validate_all.py;
+          echo 'Data generation complete. Sleeping for 1 hour...';
+          sleep 3600;
+        done
+      "
+    volumes:
+      - ./data:/app/data
+      - ./configs:/app/configs
+    environment:
+      - DEFAULT_TENANT_ID=default
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+
+  prometheus-exporter:
+    build: .
+    command: python prometheus_exporter.py
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PROMETHEUS_PORT=8000
+    restart: unless-stopped
+    depends_on:
+      - dashboard
+
+networks:
+  default:
+    driver: bridge

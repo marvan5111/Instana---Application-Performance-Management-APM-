@@ -44,8 +44,8 @@ heroku login
 heroku create instana-apm-dashboard
 
 # Set environment variables
-heroku config:set DASH_AUTH_USERNAME=admin
-heroku config:set DASH_AUTH_PASSWORD=your_secure_password
+heroku config:set DASH_USERNAME=admin
+heroku config:set DASH_PASSWORD=your_secure_password
 heroku config:set SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
 ```
 

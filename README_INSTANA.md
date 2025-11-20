@@ -11,34 +11,98 @@ This repository provides an end-to-end operational intelligence platform, featur
 - **Comprehensive Data Generation**: Generates 16+ validated datasets covering infrastructure, applications, mobile, synthetics, and logging.
 - **Secure & Deployable**: Includes basic authentication and is configured for production deployment on platforms like Heroku, AWS, or Azure.
 
-## Quick Start Example
+## Quick Start
 
-```python
-import json
+### 🐳 Docker (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/instana-apm-dashboard.git
+cd instana-apm-dashboard
 
-# To run the dashboard locally:
-# 1. Install dependencies
-#    pip install -r requirements.txt
-#
-# 2. Run the dashboard application
-#    python dashboard.py
-#
-# The dashboard will be available at http://127.0.0.1:8050
+# Run with Docker Compose
+docker-compose up -d
+
+# Access dashboard at http://localhost:8050
 # Default credentials: admin / instana
-
-# Load infrastructure entities
-with open("data/instana/infrastructure_entities.jsonl") as f:
-    # This is a JSON file, not JSONL, so we load it at once.
-    data = json.load(f) 
-    print(f"Total entities: {data.get('total_hits', 0)}")
-    for entity in data.get('items', [])[:3]:
-        print(f"  - {entity.get('label')} ({entity.get('entity_type')})")
 ```
 
-**Generate fresh data:**
+### 🐍 Local Development
 ```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Generate synthetic data
 python scripts/generate_instana_all.py --seed 42 --entities 120 --apps 15 --services 40 --issues 30
 python validate_all.py
+
+# Run dashboard
+python dashboard.py
+
+# Access at http://127.0.0.1:8050
+```
+
+### ☁️ Cloud Deployment
+```bash
+# Heroku (one-click)
+heroku create your-app-name
+git push heroku main
+
+# AWS/Azure - see DEPLOYMENT_GUIDE.md
+```
+
+## Enterprise Features
+
+### 🔐 Multi-Tenant Architecture
+- **Tenant Isolation**: Data segregation by tenant ID with secure access controls
+- **RBAC**: Admin, Editor, Viewer, Operator roles with granular permissions
+- **SSO Integration**: OAuth2, LDAP/Active Directory support
+- **Audit Logging**: Complete audit trail of user actions and system events
+
+### 📊 Dashboard Screenshots
+
+#### Overview Dashboard
+![Overview Dashboard](screenshots/overview-dashboard.png)
+*Real-time KPIs, system health gauges, and cross-platform performance comparison*
+
+#### Multi-Tenant Monitoring
+![Multi-Tenant Dashboard](screenshots/multi-tenant-dashboard.png)
+*Tenant-aware data visualization with role-based access controls*
+
+#### Anomaly Detection
+![Anomaly Detection](screenshots/anomaly-detection.png)
+*Statistical anomaly detection with confidence intervals and alert correlation*
+
+### 🚀 Usage Examples
+
+```python
+from dashboard import app
+from audit_logger import audit_logger
+
+# Initialize with tenant context
+app.config['TENANT_ID'] = 'tenant-1'
+
+# Log user action
+audit_logger.log_action(
+    user_id='admin_user',
+    action='dashboard_access',
+    resource_type='dashboard',
+    resource_id='overview',
+    details={'tab': 'overview'},
+    tenant_id='tenant-1'
+)
+
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True, host='0.0.0.0', port=8050)
+```
+
+**Generate tenant-specific data:**
+```bash
+# Generate data for specific tenant
+python scripts/generate_instana_all.py --tenant-id tenant-1 --seed 42 --entities 120
+
+# Validate with tenant isolation
+python validate_all.py --tenant tenant-1
 ```
 
 ## Project Completion Note

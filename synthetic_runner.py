@@ -3,9 +3,14 @@ import time
 import argparse
 from datetime import datetime, timedelta
 from logger import AlertingLogger
-from alerting import check_synthetic_alert
+from alerting import check_synthetic_alert, get_alert_manager
+from anomaly_detector import AnomalyDetector
 
 alert_log = AlertingLogger("synthetic_runner")
+alert_manager = get_alert_manager()
+
+# In-memory cache for real-time anomaly detection
+history_cache = {}
 
 # Store recent runs for alerting (in production, use a proper cache/database)
 recent_runs_cache = {}
@@ -41,6 +46,24 @@ def run_synthetic_check(check_config, enable_alerts=True):
             return
 
         duration = int((time.time() - start_time) * 1000)  # ms
+
+        # --- Real-time Anomaly Detection ---
+        if check_id not in history_cache:
+            history_cache[check_id] = {'detector': AnomalyDetector(method='iqr'), 'times': []}
+
+        cache = history_cache[check_id]
+        cache['times'].append(duration)
+
+        # Keep history to a reasonable size
+        if len(cache['times']) > 100:
+            cache['times'] = cache['times'][-100:]
+
+        # Fit the model and detect anomalies
+        if len(cache['times']) > 20:
+            cache['detector'].fit(cache['times'][:-1])
+            is_anomaly = cache['detector'].detect_anomalies([duration])[0][2]
+            if is_anomaly:
+                alert_log.warning(f"ANOMALY DETECTED for check {check_id}: Duration {duration}ms is unusual.")
 
         # Record the run for alerting
         run_record = {

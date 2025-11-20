@@ -1,30 +1,32 @@
-# TODO for v1.3.0 Deployment and Monitoring
+# v1.7.0 Packaging & Publishing Checklist
 
-## Deployment
-- [ ] Initialize git repository
-- [ ] Add all project files to git
-- [ ] Commit changes with message "Prepare for v1.3.0 deployment"
-- [ ] Install Heroku CLI
-- [ ] Login to Heroku
-- [ ] Create Heroku app named "instana-apm-dashboard"
-- [ ] Set environment variables: DASH_USERNAME=admin, DASH_PASSWORD=securepassword, SLACK_WEBHOOK_URL=https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK
-- [ ] Add Heroku remote
-- [ ] Push code to Heroku
-- [ ] Scale web dyno to 1
-- [ ] Open Heroku app to verify deployment
+## 1. Documentation & Release Notes
+- [ ] Update README.md with enterprise features (multi-tenant dashboards, RBAC, audit logs, SSO), usage examples, screenshots, deployment instructions, Docker/CI/CD support
+- [ ] Add v1.7.0 entry to CHANGELOG.md: "Enterprise features implemented: multi-tenancy, RBAC, audit logs, SSO."
+- [ ] Create RELEASE_NOTES_v1.7.0.md: Summarize new features, fixes, validation results, upgrade instructions from v1.3.0 → v1.7.0
 
-## Monitoring in Production
-- [ ] Add Heroku scheduler addon
-- [ ] Schedule data generation: python scripts/generate_instana_all.py --seed 42 --entities 120 --apps 15 --services 40 --issues 30 every hour
-- [ ] Verify logs update in real time (check Heroku logs)
-- [ ] Confirm alerts are sent (test with sample data)
-- [ ] Validate alert thresholds under load
+## 2. Deployment & Distribution
+- [ ] Extend DEPLOYMENT_GUIDE.md with Docker and CI/CD steps, optional Kubernetes Helm chart instructions
+- [ ] Create Dockerfile: Base python:3.11-slim, install dependencies, expose port 8050, entry point python dashboard.py
+- [ ] Create docker-compose.yml: Services dashboard and data-generator, volume mounts, environment variables for tenant IDs and RBAC roles
+- [ ] Push images to registry (DockerHub/GitHub Container Registry)
+- [ ] Optional: Deploy on Kubernetes with Helm charts for multi-tenant setups
 
-## Feedback & Iteration
-- [ ] Share live dashboard URL with teammates
-- [ ] Gather usability feedback on navigation, chart clarity, alert usefulness
-- [ ] Track issues in GitHub repository
+## 3. Operationalization
+- [ ] Set up CI/CD (GitHub Actions): .github/workflows/ci.yml for build, test, deploy, linting
+- [ ] Add monitoring hooks for meta-monitoring
+- [ ] Schedule synthetic data refresh jobs
 
-## Portfolio & LinkedIn Update
-- [ ] Post v1.3.0 announcement on LinkedIn using drafted post
-- [ ] Update portfolio with v1.3.0 milestone
+## 4. Showcasing & Portfolio
+- [ ] Update PORTFOLIO_SUMMARY.md with enterprise features and screenshots
+- [ ] Create LINKEDIN_POST_v1.7.0.md highlighting multi-tenant dashboards, RBAC, audit logs, SSO, Docker + CI/CD
+- [ ] Add screenshots/GIFs of dashboards in action
+- [ ] Publish repo on GitHub with professional README
+
+## 5. Future Roadmap
+- [ ] Update FUTURE_WORK.md: v1.8.0 AI anomaly detection, v1.9.0 cost optimization, v2.0.0 public release with installer + docs site
+
+## 6. Testing & Validation
+- [ ] Test Docker build and CI/CD pipeline
+- [ ] Validate all features work in containerized environment
+- [ ] Ensure backward compatibility and upgrade path

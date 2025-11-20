@@ -1,7 +1,10 @@
- dash
+dash
  pandas
  plotly
  gunicorn
  requests
  slack_sdk
  dash-auth
+scikit-learn
+statsmodels
+numpy

@@ -1,69 +1,109 @@
-# Release Notes: v1.2.0-instana-synthetic
-
-## Overview
-This release introduces comprehensive website monitoring, logging, and synthetic checks to the Instana APM Synthetic Data Generator, expanding coverage to 16 datasets with full validation and cross-file consistency. All new features have been thoroughly tested for integration and edge cases, ensuring production-ready synthetic data for prototyping, testing, and development workflows.
-
-## New Features
-
-### 🌐 Website Monitoring
-- **Website Configurations** (`website_config.jsonl`): Synthetic website definitions with realistic URLs, check intervals, and performance thresholds.
-- **Website Catalogs** (`website_catalog.jsonl`): Metadata catalogs for monitored websites, including labels, tags, and monitoring settings.
-- **Website Metrics** (`website_metrics.jsonl`): Time-series performance metrics such as response times, availability percentages, and error rates.
-- **Website Analyze** (`website_analyze.jsonl`): Detailed analysis snapshots with traces, issues, and performance insights for website monitoring.
-
-### 📝 Logging
-- **Log Entries** (`logs.jsonl`): Synthetic log data with timestamps, severity levels (INFO, WARN, ERROR), messages, and tags. Includes correlation IDs linking logs to traces and issues for realistic debugging scenarios.
-- Supports multiple log sources (applications, infrastructure) with temporal consistency across datasets.
-
-### 🔍 Synthetic Monitoring (Synthetic Checks)
-- **Synthetic Checks** (`synthetic_checks.jsonl`): Definitions for API and browser-based synthetic checks, including configurations, endpoints, and thresholds.
-- **Synthetic Runs** (`synthetic_runs.jsonl`): Execution results with timestamps, response times, success/failure status, and alert correlations for failed checks.
-- Checks are linked to valid endpoints (e.g., monitoring "POST /checkout") with realistic failure patterns.
-
-## Validation & Quality Assurance
-- **16 Datasets Validated**: Comprehensive validation across all 16 files (10 original + 6 new) with zero errors.
-- **Cross-File Consistency**: Entity IDs, correlation IDs, and references are fully consistent; no orphaned data.
-- **Integration Testing**: All new datasets pass integration tests, ensuring seamless compatibility with existing workflows.
-- **Edge Case Coverage**: Extensive edge case testing for realistic failure modes, temporal alignment, and data integrity.
-
-## Technical Improvements
-- Enhanced validation script (`validate_all.py`) to include new datasets and stricter consistency checks.
-- Improved logging and monitoring runners (`logger.py`, `monitor_runner.py`, `synthetic_runner.py`) for better observability.
-- Updated README_INSTANA.md with v1.2.0 highlights and usage examples.
-
-## Usage Examples
-Generate fresh data with new features:
-```bash
-python scripts/generate_instana_all.py --seed 42 --entities 120 --apps 15 --services 40 --issues 30
-python validate_all.py
-```
-
-Load and inspect new datasets:
-```python
-import json
-
-# Website metrics
-with open("data/instana/website_metrics.jsonl") as f:
-    for line in f:
-        record = json.loads(line)
-        print(f"Website: {record['entity_id']}, Response Time: {record['metrics']['response_time_ms']}ms")
-
-# Synthetic check runs
-with open("data/instana/synthetic_runs.jsonl") as f:
-    for line in f:
-        record = json.loads(line)
-        print(f"Check: {record['check_id']}, Status: {record['status']}, Duration: {record['duration_ms']}ms")
-```
-
-## Breaking Changes
-None. All changes are additive and backward-compatible.
-
-## Known Issues
-- Mobile monitoring (planned for future release) is not yet included.
-- Visualization examples are in roadmap for v1.3.0.
-
-## Acknowledgments
-Thanks to the community for feedback on v1.1.0. This release builds on user requests for expanded monitoring capabilities.
-
-## Download
-Download the complete dataset from the [GitHub Releases](https://github.com/marvan5111/Instana---Application-Performance-Management-APM-/releases/tag/v1.2.0-instana-synthetic) page, including validation logs and sample outputs.
+ # Release Notes: v1.2.0 - Expanded Data Ecosystem
+ 
+ ## Overview
+ 
+ Version 1.2.0 represents a massive expansion of the synthetic data ecosystem, building on the foundational datasets from v1.0.0 and v1.1.0. This release introduces comprehensive data generation capabilities for four new, critical monitoring domains: Website Monitoring, Mobile Monitoring, Logging, and advanced Synthetic Checks.
+ 
+ With these additions, the platform can now simulate a much wider range of real-world monitoring scenarios, providing the necessary data to build and test the full-featured dashboards and alerting systems planned for v1.3.0.
+ 
+ ## ✅ Key Features Delivered
+ 
+ This release adds over 10 new datasets, all fully integrated into the generation and validation pipelines.
+ 
+ 1.  **Website Monitoring**
+     -   `website_config.jsonl`: Generates configurations for website uptime and performance checks.
+     -   `website_catalog.jsonl`: A catalog of monitored websites.
+     -   `website_metrics.jsonl`: Time-series data for website response times.
+     -   `website_analyze.jsonl`: Detailed analysis snapshots for website performance.
+ 
+ 2.  **Mobile Monitoring**
+     -   `mobile_config.jsonl`: Configurations for mobile apps, including crash rate and response time thresholds.
+     -   `mobile_catalog.jsonl`: A catalog of monitored iOS and Android applications.
+     -   `mobile_metrics.jsonl`: Time-series data for mobile crash rates and response times.
+     -   `mobile_analyze.jsonl`: Detailed analysis including battery drain and memory usage.
+ 
+ 3.  **Logging**
+     -   `logs.jsonl`: Generates thousands of log entries with varying severity levels (INFO, WARN, ERROR), timestamps, and correlation IDs that link to other system events.
+ 
+ 4.  **Advanced Synthetic Checks**
+     -   `synthetic_checks.jsonl`: Defines multi-step synthetic journeys (e.g., API or browser-based user flows) with specific validation criteria.
+     -   `synthetic_runs.jsonl`: Produces detailed results for each synthetic check run, including success/failure status, duration, and error messages.
+ 
+ ## ⚙️ Code Summary
+ 
+ -   **`instana_synthetic/generators.py`**: Heavily updated with new generator functions for all the above datasets, including `gen_website_metrics`, `gen_mobile_metrics`, `gen_log_entry`, and `gen_synthetic_run`.
+ -   **`scripts/`**: Added new scripts to orchestrate the generation of each new data type (e.g., `generate_website_metrics.py`, `generate_logs.py`).
+ -   **`scripts/generate_instana_all.py`**: The main orchestrator was updated to include all the new v1.2.0 data generation scripts.
+ -   **`validate_all.py`**: Significantly enhanced to provide validation and cross-file consistency checks for all new datasets. For example, it now ensures that every run in `synthetic_runs.jsonl` corresponds to a valid check in `synthetic_checks.jsonl`.
+ 
+ ## 🧪 Validation Output
+ 
+ The following is the expected output from running `python validate_all.py` against the new datasets introduced in v1.2.0.
+ 
+ ```
+ Validating website_config.jsonl...
+ website_config.jsonl: Valid JSON, count: 10
+ Sample website config keys: ['website_id', 'url', 'check_interval_seconds', 'timeout_ms', 'expected_status_codes', 'alert_on_failure', 'tags']
+ 
+ Validating website_catalog.jsonl...
+ website_catalog.jsonl: Valid JSON, count: 1
+ Sample website catalog keys: ['websites']
+ 
+ Validating website_metrics.jsonl...
+ website_metrics.jsonl: Valid JSON, count: 10
+ Sample website metrics keys: ['website_id', 'metric_name', 'aggregation', 'timeframe', 'points']
+ 
+ Validating website_analyze.jsonl...
+ website_analyze.jsonl: Valid JSON, count: 10
+ Sample website analyze keys: ['website_id', 'snapshot_id', 'timestamp', 'response_time_ms', 'status_code', 'error_message']
+ 
+ Validating logs.jsonl...
+ logs.jsonl: Valid JSON, count: 1000
+ Sample log keys: ['timestamp', 'severity', 'message', 'entity_id', 'correlation_id', 'tags', 'source']
+ 
+ Validating synthetic_checks.jsonl...
+ synthetic_checks.jsonl: Valid JSON, count: 20
+ Sample synthetic check keys: ['check_id', 'name', 'type', 'endpoint_id', 'url', 'method', 'headers', 'body', 'expected_status', 'timeout_ms', 'frequency_seconds', 'locations']
+ 
+ Validating synthetic_runs.jsonl...
+ synthetic_runs.jsonl: Valid JSON, count: 100
+ Sample synthetic run keys: ['run_id', 'check_id', 'timestamp', 'duration_ms', 'status', 'status_code', 'error_message', 'location']
+ 
+ Cross-file consistency for synthetic checks and runs...
+ All synthetic runs reference valid checks.
+ 
+ Validating mobile_config.jsonl...
+ mobile_config.jsonl: Valid JSON, count: 10
+ Sample mobile config keys: ['mobile_app_id', 'platform', 'version', 'crash_threshold', 'response_time_threshold_ms', 'alert_on_crash']
+ 
+ Validating mobile_catalog.jsonl...
+ mobile_catalog.jsonl: Valid JSON, count: 1
+ Sample mobile catalog keys: ['mobile_apps']
+ 
+ Validating mobile_metrics.jsonl...
+ mobile_metrics.jsonl: Valid JSON, count: 10
+ Sample mobile metrics keys: ['mobile_app_id', 'metric_name', 'aggregation', 'timeframe', 'points']
+ 
+ Validating mobile_analyze.jsonl...
+ mobile_analyze.jsonl: Valid JSON, count: 10
+ Sample mobile analyze keys: ['mobile_app_id', 'snapshot_id', 'timestamp', 'platform', 'version', 'crash_count', 'avg_response_time_ms']
+ 
+ Validation complete.
+ ```
+ 
+ ## How to Use
+ 
+ 1.  **Generate Data**:
+     ```bash
+     python scripts/generate_instana_all.py
+     ```
+ 
+ 2.  **Validate Data**:
+     ```bash
+     python validate_all.py
+     ```
+ 
+ ## Assets
+ 
+ -   `instana-synthetic-v1.2.0.zip`: A zip archive containing all generated datasets for this release.
+ -   `validation_log_v1.2.0.txt`: The full output log from the validation script, confirming the integrity of all new files.

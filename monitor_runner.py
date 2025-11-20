@@ -2,9 +2,14 @@ import requests
 import time
 import argparse
 from logger import AlertingLogger
-from alerting import check_website_alert
+from alerting import check_website_alert, get_alert_manager
+from anomaly_detector import AnomalyDetector
 
 alert_log = AlertingLogger("monitor_runner")
+alert_manager = get_alert_manager()
+
+# In-memory cache for real-time anomaly detection
+history_cache = {}
 
 def run_monitoring_checks(config, enable_alerts=True):
     """
@@ -23,6 +28,24 @@ def run_monitoring_checks(config, enable_alerts=True):
         start_time = time.time()
         response = requests.get(url, timeout=timeout)
         response_time = int((time.time() - start_time) * 1000)  # ms
+
+        # --- Real-time Anomaly Detection ---
+        if website_id not in history_cache:
+            history_cache[website_id] = {'detector': AnomalyDetector(method='iqr'), 'times': []}
+
+        cache = history_cache[website_id]
+        cache['times'].append(response_time)
+
+        # Keep history to a reasonable size
+        if len(cache['times']) > 100:
+            cache['times'] = cache['times'][-100:]
+
+        # Fit the model and detect anomalies
+        if len(cache['times']) > 20: # Need enough data to establish a baseline
+            cache['detector'].fit(cache['times'][:-1]) # Fit on historical data
+            is_anomaly = cache['detector'].detect_anomalies([response_time])[0][2]
+            if is_anomaly:
+                alert_log.warning(f"ANOMALY DETECTED for {website_id}: Response time {response_time}ms is unusual.")
 
         if response.status_code in expected_codes:
             alert_log.log_monitoring_result("website", url, True, response_time)

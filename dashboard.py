@@ -1,5 +1,5 @@
 import dash
-from dash import html, dcc, Input, Output
+from dash import html, dcc, Input, Output, State
 import plotly.graph_objects as go
 import plotly.express as px
 import pandas as pd
@@ -8,8 +8,44 @@ from datetime import datetime
 import os
 import dash_auth
 import logging
+from anomaly_detector import load_timeseries_with_anomalies
+from predictive_analytics import forecast_timeseries
+from audit_logger import audit_logger
+from sso_connector import sso_connector
+from flask import Flask, request, redirect, session, url_for
 
 logging.basicConfig(level=logging.INFO, format='[%(asctime)s] [%(levelname)s] %(message)s')
+
+# Session management for v1.7.0
+user_sessions = {}
+current_user = {'user_id': 'admin', 'role': 'admin', 'tenant_id': 'default'}
+
+# RBAC Permissions
+ROLE_PERMISSIONS = {
+    'admin': {'read': True, 'write': True, 'delete': True, 'admin': True},
+    'editor': {'read': True, 'write': True, 'delete': False, 'admin': False},
+    'viewer': {'read': True, 'write': False, 'delete': False, 'admin': False},
+    'operator': {'read': True, 'write': True, 'delete': False, 'admin': False}
+}
+
+# Sample users for role switching
+SAMPLE_USERS = {
+    'admin_user': {'user_id': 'admin_user', 'role': 'admin', 'tenant_id': 'default'},
+    'editor_user': {'user_id': 'editor_user', 'role': 'editor', 'tenant_id': 'tenant-1'},
+    'viewer_user': {'user_id': 'viewer_user', 'role': 'viewer', 'tenant_id': 'tenant-2'},
+    'operator_user': {'user_id': 'operator_user', 'role': 'operator', 'tenant_id': 'default'}
+}
+
+def check_permission(user, permission):
+    """Check if user has the required permission."""
+    if not user:
+        return False
+    role = user.get('role', 'viewer')
+    return ROLE_PERMISSIONS.get(role, {}).get(permission, False)
+
+def get_available_tenants():
+    """Get list of available tenants."""
+    return ['default', 'tenant-1', 'tenant-2', 'tenant-3']
 
 # Data loading functions
 def load_jsonl_data(filepath):
@@ -23,11 +59,14 @@ def load_jsonl_data(filepath):
         logging.warning(f"Data file not found: {filepath}")
     return data
 
-def load_website_metrics():
+def load_website_metrics(tenant_id=None):
     """Load website metrics data."""
     data = load_jsonl_data('data/instana/website_metrics.jsonl')
     if data:
         df = pd.DataFrame(data)
+        # Filter by tenant if specified
+        if tenant_id:
+            df = df[df.get('tenant_id') == tenant_id]
         # Expand points into separate rows
         rows = []
         for _, row in df.iterrows():
@@ -41,30 +80,39 @@ def load_website_metrics():
         return pd.DataFrame(rows)
     return pd.DataFrame()
 
-def load_synthetic_runs():
+def load_synthetic_runs(tenant_id=None):
     """Load synthetic check runs data."""
     data = load_jsonl_data('data/instana/synthetic_runs.jsonl')
     if data:
         df = pd.DataFrame(data)
+        # Filter by tenant if specified
+        if tenant_id:
+            df = df[df.get('tenant_id') == tenant_id]
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         return df
     return pd.DataFrame()
 
-def load_logs():
+def load_logs(tenant_id=None):
     """Load logs data."""
     data = load_jsonl_data('data/instana/logs.jsonl')
     if data:
         df = pd.DataFrame(data)
+        # Filter by tenant if specified
+        if tenant_id:
+            df = df[df.get('tenant_id') == tenant_id]
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         return df
     return pd.DataFrame()
 
-def load_mobile_metrics():
+def load_mobile_metrics(tenant_id=None):
     """Load mobile metrics data."""
     data = load_jsonl_data('data/instana/mobile_metrics.jsonl')
     if data:
         rows = []
         for record in data:
+            # Filter by tenant if specified
+            if tenant_id and record.get('tenant_id') != tenant_id:
+                continue
             mobile_app_id = record['mobile_app_id']
             for point in record['points']:
                 rows.append({
@@ -76,17 +124,20 @@ def load_mobile_metrics():
         return pd.DataFrame(rows)
     return pd.DataFrame()
 
-def load_mobile_analyze():
+def load_mobile_analyze(tenant_id=None):
     """Load mobile analyze data."""
     data = load_jsonl_data('data/instana/mobile_analyze.jsonl')
     if data:
         df = pd.DataFrame(data)
+        # Filter by tenant if specified
+        if tenant_id:
+            df = df[df.get('tenant_id') == tenant_id]
         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
         return df
     return pd.DataFrame()
 
 # Initialize Dash app
-app = dash.Dash(__name__, title="Instana Monitoring Dashboard v1.3.0")
+app = dash.Dash(__name__, title="Instana Monitoring Dashboard v1.7.0")
 server = app.server
 
 # --- Add Authentication from Environment Variables ---
@@ -103,6 +154,28 @@ auth = dash_auth.BasicAuth(app, VALID_USERNAME_PASSWORD_PAIRS)
 app.layout = html.Div([
     html.H1("Instana APM Synthetic Monitoring Dashboard", style={'textAlign': 'center'}),
 
+    # User and Tenant Controls
+    html.Div([
+        html.Div([
+            html.Label("Current User:"),
+            dcc.Dropdown(
+                id='user-selector',
+                options=[{'label': k, 'value': k} for k in SAMPLE_USERS.keys()],
+                value='admin_user',
+                style={'width': '200px', 'marginRight': '20px'}
+            ),
+            html.Label("Current Tenant:"),
+            dcc.Dropdown(
+                id='tenant-selector',
+                options=[{'label': t, 'value': t} for t in get_available_tenants()],
+                value='default',
+                style={'width': '150px', 'marginRight': '20px'}
+            ),
+            html.Label("Role:"),
+            html.Span(id='current-role-display', style={'marginRight': '20px', 'fontWeight': 'bold'}),
+        ], style={'display': 'flex', 'alignItems': 'center', 'marginBottom': '20px'}),
+    ]),
+
     # Interval component for automatic refresh
     dcc.Interval(
         id='interval-component',
@@ -117,6 +190,10 @@ app.layout = html.Div([
         dcc.Tab(label='Mobile Monitoring', value='mobile'),
         dcc.Tab(label='Synthetic Checks', value='synthetic'),
         dcc.Tab(label='Logging Analysis', value='logs'),
+        dcc.Tab(label='Audit Logs', value='audit', disabled=True),  # Will enable based on permissions
+        dcc.Tab(label='Anomaly Detection', value='anomalies'),
+        dcc.Tab(label='Predictive Analytics', value='predictions'),
+        dcc.Tab(label='Cloud Native', value='cloud'),
     ]),
 
     html.Div(id='tab-content')
@@ -126,6 +203,26 @@ app.layout = html.Div([
 @app.callback(Output('tab-content', 'children'),
               Input('tabs', 'value'))
 def render_content(tab):
+    # Check permissions for tab access
+    if not check_permission(current_user, 'read'):
+        return html.Div([
+            html.H2("Access Denied"),
+            html.P("You do not have permission to view this dashboard.")
+        ])
+
+    # Enforce RBAC for specific tabs
+    if tab == 'audit' and not check_permission(current_user, 'admin'):
+        return html.Div([
+            html.H2("Access Denied"),
+            html.P("Only administrators can view audit logs.")
+        ])
+
+    if tab == 'cloud' and not check_permission(current_user, 'write'):
+        return html.Div([
+            html.H2("Access Denied"),
+            html.P("You need write permissions to access cloud native features.")
+        ])
+
     if tab == 'website':
         return html.Div([
             html.H2("Website Monitoring Dashboard"),
@@ -215,6 +312,52 @@ def render_content(tab):
             dcc.Graph(id='log-timeline'),
             dcc.Graph(id='log-correlation-scatter')
         ])
+    elif tab == 'audit':
+        if not check_permission(current_user, 'admin'):
+            return html.Div([
+                html.H2("Access Denied"),
+                html.P("Only administrators can view audit logs.")
+            ])
+        return html.Div([
+            html.H2("Audit Logs Dashboard"),
+            dcc.Dropdown(
+                id='audit-user-filter',
+                options=[{'label': 'All Users', 'value': 'all'}],
+                value='all',
+                style={'width': '200px', 'marginBottom': '20px'}
+            ),
+            dcc.Dropdown(
+                id='audit-action-filter',
+                options=[
+                    {'label': 'All Actions', 'value': 'all'},
+                    {'label': 'Login', 'value': 'login'},
+                    {'label': 'Logout', 'value': 'logout'},
+                    {'label': 'View Data', 'value': 'view'},
+                    {'label': 'Export Data', 'value': 'export'}
+                ],
+                value='all',
+                style={'width': '200px', 'marginBottom': '20px'}
+            ),
+            html.Div(id='audit-logs-table'),
+            html.Button('Refresh Audit Logs', id='refresh-audit-btn', n_clicks=0)
+        ])
+    elif tab == 'cloud':
+        return html.Div([
+            html.H2("Cloud Native Monitoring Dashboard"),
+            html.Div([
+                dcc.Graph(id='kubernetes-cluster-status'),
+                dcc.Graph(id='kubernetes-pod-metrics'),
+            ], style={'display': 'flex', 'flexDirection': 'row'}),
+            html.Div([
+                dcc.Graph(id='kubernetes-deployment-health'),
+                dcc.Graph(id='prometheus-export-status'),
+            ], style={'display': 'flex', 'flexDirection': 'row'}),
+            html.Button('Export to Prometheus', id='export-prometheus-btn', n_clicks=0,
+                       disabled=not check_permission(current_user, 'write')),
+            html.Div(id='export-status')
+        ])
+
+# This callback was moved to the end
 
 # Website monitoring callbacks
 @app.callback(
@@ -228,7 +371,7 @@ def update_website_charts(tab, n):
     if tab != 'website':
         return {}, {}, {}
 
-    df = load_website_metrics()
+    df = load_website_metrics(current_user.get('tenant_id'))
     if df.empty:
         empty_fig = go.Figure()
         empty_fig.add_annotation(text="No website metrics data available", showarrow=False)
@@ -267,7 +410,7 @@ def update_synthetic_charts(tab, n):
     if tab != 'synthetic':
         return {}, {}, {}, {}, {}
 
-    df = load_synthetic_runs()
+    df = load_synthetic_runs(current_user.get('tenant_id'))
     if df.empty:
         empty_fig = go.Figure()
         empty_fig.add_annotation(text="No synthetic runs data available", showarrow=False)
@@ -319,7 +462,7 @@ def update_log_charts(tab, severity, n):
     if tab != 'logs':
         return {}, {}, {}, {}
 
-    df = load_logs()
+    df = load_logs(current_user.get('tenant_id'))
     if df.empty:
         empty_fig = go.Figure()
         empty_fig.add_annotation(text="No logs data available", showarrow=False)
@@ -361,7 +504,7 @@ def update_mobile_charts(tab, n):
     if tab != 'mobile':
         return {}, {}, {}
 
-    df = load_mobile_metrics()
+    df = load_mobile_metrics(current_user.get('tenant_id'))
     if df.empty:
         empty_fig = go.Figure()
         empty_fig.add_annotation(text="No mobile metrics data available", showarrow=False)
@@ -376,7 +519,7 @@ def update_mobile_charts(tab, n):
                           title='Mobile App Response Time Trends (ms)', labels={'response_time_ms': 'Response Time (ms)'})
 
     # Battery and memory usage chart (stacked bar for consumption trends)
-    analyze_df = load_mobile_analyze()
+    analyze_df = load_mobile_analyze(current_user.get('tenant_id'))
     if not analyze_df.empty:
         battery_memory_fig = go.Figure()
         battery_memory_fig.add_trace(go.Bar(name='Battery Drain %', x=analyze_df['mobile_app_id'], y=analyze_df['battery_drain_percent'], marker_color='orange'))
@@ -407,9 +550,9 @@ def update_overview_kpis(tab, n):
         return "...", "...", "...", "..."
 
     # Load data
-    website_df = load_website_metrics()
-    mobile_df = load_mobile_metrics()
-    synthetic_df = load_synthetic_runs()
+    website_df = load_website_metrics(current_user.get('tenant_id'))
+    mobile_df = load_mobile_metrics(current_user.get('tenant_id'))
+    synthetic_df = load_synthetic_runs(current_user.get('tenant_id'))
 
     # Calculate KPIs
     uptime = "N/A"
@@ -445,10 +588,10 @@ def update_overview_charts(tab, n):
         return {}, {}, {}, {}
 
     # Load data
-    website_df = load_website_metrics()
-    mobile_df = load_mobile_metrics()
-    synthetic_df = load_synthetic_runs()
-    logs_df = load_logs()
+    website_df = load_website_metrics(current_user.get('tenant_id'))
+    mobile_df = load_mobile_metrics(current_user.get('tenant_id'))
+    synthetic_df = load_synthetic_runs(current_user.get('tenant_id'))
+    logs_df = load_logs(current_user.get('tenant_id'))
 
     # Website vs Mobile comparison
     comparison_fig = go.Figure()
@@ -535,6 +678,391 @@ def update_overview_charts(tab, n):
     )
 
     return comparison_fig, alert_fig, health_fig, quick_gauges_fig
+
+# Anomaly detection callbacks
+@app.callback(
+    [Output('anomaly-entity-filter', 'options'),
+     Output('anomaly-timeseries-chart', 'figure'),
+     Output('anomaly-score-distribution', 'figure'),
+     Output('anomaly-heatmap', 'figure'),
+     Output('anomaly-summary-stats', 'figure')],
+    [Input('tabs', 'value'),
+     Input('anomaly-entity-filter', 'value'),
+     Input('interval-component', 'n_intervals')]
+)
+def update_anomaly_charts(tab, selected_entity, n):
+    if tab != 'anomalies':
+        return [], {}, {}, {}, {}
+
+    anomalous_data = load_anomalous_timeseries()
+    if anomalous_data.empty:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(text="No anomaly data available", showarrow=False)
+        return [], empty_fig, empty_fig, empty_fig, empty_fig
+
+    # Create entity options
+    entities = []
+    for record in anomalous_data:
+        entity_key = f"{record['entity_id']}_{record['metric_name']}"
+        entities.append({'label': entity_key, 'value': entity_key})
+    entities = list(set(tuple(e.items()) for e in entities))
+    entity_options = [dict(e) for e in entities]
+
+    if not selected_entity and entity_options:
+        selected_entity = entity_options[0]['value']
+
+    # Filter data for selected entity
+    if selected_entity:
+        entity_id, metric_name = selected_entity.split('_', 1)
+        filtered_data = [r for r in anomalous_data if r['entity_id'] == entity_id and r['metric_name'] == metric_name]
+    else:
+        filtered_data = anomalous_data[:1] if anomalous_data else []
+
+    if not filtered_data:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(text="No data for selected entity", showarrow=False)
+        return entity_options, empty_fig, empty_fig, empty_fig, empty_fig
+
+    record = filtered_data[0]
+
+    # Timeseries with anomalies
+    timeseries_fig = go.Figure()
+
+    # Normal data points
+    timestamps = []
+    values = []
+    for point in record['points']:
+        timestamps.append(datetime.fromtimestamp(point['timestamp'] / 1000))
+        values.append(point['value'])
+
+    timeseries_fig.add_trace(go.Scatter(
+        x=timestamps,
+        y=values,
+        mode='lines+markers',
+        name='Metric Values',
+        line=dict(color='blue')
+    ))
+
+    # Anomaly points
+    if record.get('anomalies'):
+        anomaly_timestamps = [datetime.fromtimestamp(a['timestamp'] / 1000) for a in record['anomalies']]
+        anomaly_values = [a['value'] for a in record['anomalies']]
+        anomaly_scores = [a['anomaly_score'] for a in record['anomalies']]
+
+        timeseries_fig.add_trace(go.Scatter(
+            x=anomaly_timestamps,
+            y=anomaly_values,
+            mode='markers',
+            name='Anomalies',
+            marker=dict(color='red', size=10, symbol='x')
+        ))
+
+    timeseries_fig.update_layout(
+        title=f'Anomaly Detection: {selected_entity}',
+        xaxis_title='Time',
+        yaxis_title='Value'
+    )
+
+    # Anomaly score distribution
+    if record.get('anomalies'):
+        scores = [a['anomaly_score'] for a in record['anomalies']]
+        score_fig = px.histogram(scores, nbins=20, title='Anomaly Score Distribution')
+        score_fig.update_layout(xaxis_title='Anomaly Score', yaxis_title='Frequency')
+    else:
+        score_fig = go.Figure()
+        score_fig.add_annotation(text="No anomalies detected", showarrow=False)
+
+    # Anomaly heatmap (simplified)
+    heatmap_fig = go.Figure()
+    heatmap_fig.add_annotation(text="Anomaly Heatmap - Coming Soon", showarrow=False)
+
+    # Summary statistics
+    total_points = len(record['points'])
+    anomaly_count = len(record.get('anomalies', []))
+    anomaly_rate = anomaly_count / total_points if total_points > 0 else 0
+
+    summary_fig = go.Figure()
+    summary_fig.add_trace(go.Indicator(
+        mode="number",
+        value=anomaly_rate * 100,
+        title={"text": "Anomaly Rate %"},
+        gauge={'axis': {'range': [0, 100]}, 'bar': {'color': 'red'}}
+    ))
+
+    return entity_options, timeseries_fig, score_fig, heatmap_fig, summary_fig
+
+# Predictive analytics callbacks
+@app.callback(
+    [Output('forecast-entity-filter', 'options'),
+     Output('forecast-chart', 'figure'),
+     Output('forecast-accuracy', 'figure'),
+     Output('forecast-trends', 'figure'),
+     Output('forecast-confidence', 'figure')],
+    [Input('tabs', 'value'),
+     Input('forecast-entity-filter', 'value'),
+     Input('interval-component', 'n_intervals')]
+)
+def update_forecast_charts(tab, selected_entity, n):
+    if tab != 'predictions':
+        return [], {}, {}, {}, {}
+
+    forecast_data = load_forecast_data()
+
+    if not forecast_data:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(text="No forecast data available", showarrow=False)
+        return [], empty_fig, empty_fig, empty_fig, empty_fig
+
+    # Create entity options
+    entity_options = [{'label': k, 'value': k} for k in forecast_data.keys()]
+
+    if not selected_entity and entity_options:
+        selected_entity = entity_options[0]['value']
+
+    if selected_entity not in forecast_data:
+        empty_fig = go.Figure()
+        empty_fig.add_annotation(text="No forecast data for selected entity", showarrow=False)
+        return entity_options, empty_fig, empty_fig, empty_fig, empty_fig
+
+    entity_forecast = forecast_data[selected_entity]
+
+    # Forecast chart
+    forecast_fig = go.Figure()
+
+    # Historical data
+    if 'historical' in entity_forecast:
+        hist_times = [datetime.fromtimestamp(t / 1000) for t in entity_forecast['historical']['timestamps']]
+        forecast_fig.add_trace(go.Scatter(
+            x=hist_times,
+            y=entity_forecast['historical']['values'],
+            mode='lines',
+            name='Historical',
+            line=dict(color='blue')
+        ))
+
+    # Forecast data
+    if 'forecast' in entity_forecast:
+        forecast_times = [datetime.fromtimestamp(t / 1000) for t in entity_forecast['forecast']['timestamps']]
+        forecast_fig.add_trace(go.Scatter(
+            x=forecast_times,
+            y=entity_forecast['forecast']['values'],
+            mode='lines',
+            name='Forecast',
+            line=dict(color='orange', dash='dash')
+        ))
+
+        # Confidence intervals
+        if 'lower_bound' in entity_forecast['forecast'] and 'upper_bound' in entity_forecast['forecast']:
+            forecast_fig.add_trace(go.Scatter(
+                x=forecast_times + forecast_times[::-1],
+                y=entity_forecast['forecast']['upper_bound'] + entity_forecast['forecast']['lower_bound'][::-1],
+                fill='toself',
+                fillcolor='rgba(255,165,0,0.2)',
+                line=dict(color='rgba(255,255,255,0)'),
+                name='Confidence Interval'
+            ))
+
+    forecast_fig.update_layout(
+        title=f'Predictive Forecast: {selected_entity}',
+        xaxis_title='Time',
+        yaxis_title='Value'
+    )
+
+    # Forecast accuracy (placeholder)
+    accuracy_fig = go.Figure()
+    accuracy_fig.add_annotation(text="Forecast Accuracy Metrics - Coming Soon", showarrow=False)
+
+    # Forecast trends
+    trends_fig = go.Figure()
+    trends_fig.add_annotation(text="Trend Analysis - Coming Soon", showarrow=False)
+
+    # Forecast confidence
+    confidence_fig = go.Figure()
+    confidence_fig.add_annotation(text="Confidence Analysis - Coming Soon", showarrow=False)
+
+    return entity_options, forecast_fig, accuracy_fig, trends_fig, confidence_fig
+
+# Cloud Native callbacks
+@app.callback(
+    [Output('kubernetes-cluster-status', 'figure'),
+     Output('kubernetes-pod-metrics', 'figure'),
+     Output('kubernetes-deployment-health', 'figure'),
+     Output('prometheus-export-status', 'figure')],
+    [Input('tabs', 'value'),
+     Input('interval-component', 'n_intervals')]
+)
+def update_cloud_charts(tab, n):
+    if tab != 'cloud':
+        return {}, {}, {}, {}
+
+    clusters_df = load_kubernetes_clusters()
+    deployments_df = load_kubernetes_deployments()
+    pods_df = load_kubernetes_pods()
+
+    # Cluster status chart
+    if not clusters_df.empty:
+        cluster_status = clusters_df['status'].value_counts()
+        cluster_fig = px.pie(values=cluster_status.values, names=cluster_status.index,
+                           title='Kubernetes Cluster Status Distribution')
+    else:
+        cluster_fig = go.Figure()
+        cluster_fig.add_annotation(text="No Kubernetes cluster data available", showarrow=False)
+
+    # Pod metrics chart
+    if not pods_df.empty:
+        pod_metrics_fig = go.Figure()
+        pod_metrics_fig.add_trace(go.Bar(name='CPU Usage (cores)', x=pods_df['pod_id'], y=pods_df['metrics'].apply(lambda x: x['cpu_usage_cores']), marker_color='blue'))
+        pod_metrics_fig.add_trace(go.Bar(name='Memory Usage (MB)', x=pods_df['pod_id'], y=pods_df['metrics'].apply(lambda x: x['memory_usage_mb']), marker_color='green'))
+        pod_metrics_fig.update_layout(title='Pod Resource Usage', barmode='group')
+    else:
+        pod_metrics_fig = go.Figure()
+        pod_metrics_fig.add_annotation(text="No Kubernetes pod data available", showarrow=False)
+
+    # Deployment health chart
+    if not deployments_df.empty:
+        deployment_health = deployments_df['rollout_status'].value_counts()
+        deployment_fig = px.bar(x=deployment_health.index, y=deployment_health.values,
+                              title='Deployment Rollout Status', labels={'x': 'Status', 'y': 'Count'})
+    else:
+        deployment_fig = go.Figure()
+        deployment_fig.add_annotation(text="No Kubernetes deployment data available", showarrow=False)
+
+    # Prometheus export status (placeholder)
+    prometheus_fig = go.Figure()
+    prometheus_fig.add_annotation(text="Prometheus Export Status - Ready", showarrow=False)
+
+    return cluster_fig, pod_metrics_fig, deployment_fig, prometheus_fig
+
+@app.callback(
+    Output('export-status', 'children'),
+    Input('export-prometheus-btn', 'n_clicks')
+)
+def export_to_prometheus(n_clicks):
+    if n_clicks and n_clicks > 0:
+        try:
+            from prometheus_exporter import export_metrics_to_prometheus
+            # Export some sample metrics
+            timeseries_data = load_jsonl_data('data/instana/metrics_timeseries.jsonl')
+            if timeseries_data:
+                export_metrics_to_prometheus(timeseries_data[:10], "data/exports/metrics.prom")
+                return "Successfully exported metrics to Prometheus format!"
+            else:
+                return "No metrics data available for export."
+        except Exception as e:
+            return f"Export failed: {str(e)}"
+    return ""
+
+# Callback for user and tenant switching
+@app.callback(
+    [Output('tabs', 'children'),
+     Output('current-role-display', 'children')],
+    [Input('user-selector', 'value'),
+     Input('tenant-selector', 'value')]
+)
+def switch_user_and_tenant(selected_user, selected_tenant):
+    global current_user
+    if selected_user in SAMPLE_USERS:
+        current_user = SAMPLE_USERS[selected_user].copy()
+        current_user['tenant_id'] = selected_tenant
+
+    # Log the user switch
+    audit_logger.log_action(
+        user_id=current_user['user_id'],
+        action='user_switch',
+        resource_type='dashboard',
+        resource_id='user_tenant_switch',
+        details={'new_user': current_user['user_id'], 'new_tenant': current_user['tenant_id']},
+        tenant_id=current_user['tenant_id']
+    )
+
+    # Return updated tabs based on permissions
+    tabs = [
+        dcc.Tab(label='Overview', value='overview'),
+        dcc.Tab(label='Website Monitoring', value='website'),
+        dcc.Tab(label='Mobile Monitoring', value='mobile'),
+        dcc.Tab(label='Synthetic Checks', value='synthetic'),
+        dcc.Tab(label='Logging Analysis', value='logs'),
+    ]
+
+    if check_permission(current_user, 'admin'):
+        tabs.append(dcc.Tab(label='Audit Logs', value='audit'))
+
+    tabs.extend([
+        dcc.Tab(label='Anomaly Detection', value='anomalies'),
+        dcc.Tab(label='Predictive Analytics', value='predictions'),
+        dcc.Tab(label='Cloud Native', value='cloud'),
+    ])
+
+    role_display = current_user.get('role', 'viewer').capitalize()
+
+    return tabs, role_display
+
+# Callback for audit logs
+@app.callback(
+    Output('audit-logs-table', 'children'),
+    [Input('tabs', 'value'),
+     Input('audit-user-filter', 'value'),
+     Input('audit-action-filter', 'value'),
+     Input('refresh-audit-btn', 'n_clicks')]
+)
+def update_audit_logs_table(tab, user_filter, action_filter, n_clicks):
+    if tab != 'audit':
+        return ""
+
+    # Get audit trail
+    audit_trail = audit_logger.get_audit_trail(limit=50)
+
+    # Filter by user and action
+    if user_filter != 'all':
+        audit_trail = [entry for entry in audit_trail if entry['user_id'] == user_filter]
+    if action_filter != 'all':
+        audit_trail = [entry for entry in audit_trail if entry['action'] == action_filter]
+
+    # Create table
+    if not audit_trail:
+        return html.P("No audit logs found.")
+
+    table_header = [
+        html.Thead(html.Tr([
+            html.Th("Timestamp"),
+            html.Th("User"),
+            html.Th("Action"),
+            html.Th("Resource Type"),
+            html.Th("Resource ID"),
+            html.Th("Details")
+        ]))
+    ]
+
+    table_body = [
+        html.Tbody([
+            html.Tr([
+                html.Td(datetime.fromtimestamp(entry['timestamp'] / 1000).strftime('%Y-%m-%d %H:%M:%S')),
+                html.Td(entry.get('user_id', 'N/A')),
+                html.Td(entry.get('action', 'N/A')),
+                html.Td(entry.get('resource_type', 'N/A')),
+                html.Td(entry.get('resource_id', 'N/A')),
+                html.Td(str(entry.get('details', {})))
+            ]) for entry in audit_trail
+        ])
+    ]
+
+    return html.Table(table_header + table_body, style={'width': '100%', 'border': '1px solid #ddd'})
+
+# Add audit logging to tab switches
+@app.callback(Output('tab-content', 'children'),
+              Input('tabs', 'value'))
+def render_content_with_audit(tab):
+    # Log tab access
+    audit_logger.log_action(
+        user_id=current_user['user_id'],
+        action='view_tab',
+        resource_type='dashboard',
+        resource_id=tab,
+        tenant_id=current_user['tenant_id']
+    )
+
+    # Call the original render_content function
+    return render_content(tab)
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=8050)
